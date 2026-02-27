@@ -381,11 +381,11 @@ function PipelineTab({ applications }: { applications: Record<string, unknown>[]
   const filtered =
     filter === 'all' ? applications : applications.filter((a) => a.status === filter)
 
-  const counts = applications.reduce((acc, a) => {
-    const s = a.status as ApplicationStatus
+  const counts = applications.reduce((acc: Record<string, number>, a) => {
+    const s = a.status as string
     acc[s] = (acc[s] || 0) + 1
     return acc
-  }, {} as Record<ApplicationStatus, number>)
+  }, {})
 
   return (
     <div className="phase-in">
@@ -506,7 +506,7 @@ function DNATab({
               </div>
               <p className="text-sm text-[#f0ebe0] leading-relaxed">{a.formatted as string}</p>
               {a.metric && (
-                <p className="font-mono text-[11px] text-[#27ae60] mt-1.5">↑ {a.metric as string}</p>
+                <p className="font-mono text-[11px] text-[#27ae60] mt-1.5">↑ {String(a.metric)}</p>
               )}
             </div>
           ))}
