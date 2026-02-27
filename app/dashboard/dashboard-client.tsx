@@ -505,7 +505,7 @@ function DNATab({
                 {a.company as string} · {a.title as string}
               </div>
               <p className="text-sm text-[#f0ebe0] leading-relaxed">{a.formatted as string}</p>
-              {a.metric && (
+              {!!a.metric && (
                 <p className="font-mono text-[11px] text-[#27ae60] mt-1.5">↑ {String(a.metric)}</p>
               )}
             </div>
