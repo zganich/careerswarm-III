@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerSwarm — Build Your Career DNA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- PDF parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- DOCX parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root {
+  --black: #080808;
+  --surface: #111111;
+  --surface-2: #181818;
+  --surface-3: #202020;
+  --border: #2a2a2a;
+  --border-light: #333;
+  --amber: #d4922a;
+  --amber-dim: #7a5218;
+  --amber-glow: rgba(212,146,42,0.08);
+  --cream: #f0ebe0;
+  --cream-dim: #7a7060;
+  --cream-faint: #3a3530;
+  --green: #2ecc71;
+  --green-dim: rgba(46,204,113,0.12);
+  --red: #e74c3c;
+  --red-dim: rgba(231,76,60,0.12);
+  --yellow: #f39c12;
+  --yellow-dim: rgba(243,156,18,0.12);
+  --blue: #3498db;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--black);
+  color:var(--cream);
+  font-family:'DM Sans',sans-serif;
+  font-weight:300;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+/* NAV */
+nav {
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(8,8,8,0.95);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  padding:0 40px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:56px;
+}
+.nav-logo { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.12em; color:var(--amber); text-transform:uppercase; }
+.nav-steps { display:flex; gap:0; }
+.nav-step {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  padding:0 20px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  border-right:1px solid var(--border);
+  position:relative;
+  transition:color .2s;
+}
+.nav-step:first-child { border-left:1px solid var(--border); }
+.nav-step.active { color:var(--amber); }
+.nav-step.done { color:var(--green); cursor:pointer; }
+.nav-step.done::after {
+  content:'✓';
+  margin-left:6px;
+  font-size:9px;
+}
+.nav-step.active::before {
+  content:'';
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:2px;
+  background:var(--amber);
+}
+/* MAIN */
+.main { max-width:860px; margin:0 auto; padding:60px 40px 120px; }
+/* PHASE PANELS */
+.phase { display:none; }
+.phase.active { display:block; animation:phaseIn .35s ease; }
+@keyframes phaseIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.phase-header { margin-bottom:48px; }
+.phase-eyebrow {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.phase-eyebrow::after { content:''; width:32px; height:1px; background:var(--amber-dim); }
+.phase-title {
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(32px,4vw,52px);
+  font-weight:400;
+  line-height:1.05;
+  margin-bottom:12px;
+}
+.phase-title em { font-style:italic; color:var(--amber); }
+.phase-desc { font-size:15px; color:var(--cream-dim); max-width:560px; line-height:1.7; }
+/* UPLOAD ZONE */
+.upload-zone {
+  border:1px dashed var(--border-light);
+  padding:60px 40px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .2s, background .2s;
+  margin-bottom:8px;
+  position:relative;
+}
+.upload-zone:hover { border-color:var(--amber-dim); background:var(--amber-glow); }
+.upload-zone.drag { border-color:var(--amber); background:var(--amber-glow); }
+.upload-icon { font-size:36px; margin-bottom:16px; opacity:.35; }
+.upload-label { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--cream-dim); margin-bottom:8px; }
+.upload-sub { font-size:13px; color:var(--cream-dim); opacity:.5; }
+.upload-file-input { display:none; }
+.or-divider {
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin:24px 0;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+}
+.or-divider::before,.or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+/* TEXTAREA */
+textarea {
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--cream);
+  font-family:'DM Mono',monospace;
+  font-size:12px;
+  font-weight:300;
+  line-height:1.7;
+  padding:20px;
+  outline:none;
+  resize:vertical;
+  transition:border-color .2s;
+}
+textarea:focus { border-color:var(--amber-dim); }
+textarea::placeholder { color:var(--cream-dim); opacity:.35; font-style:italic; }
+input[type=text],input[type=email],input[type=tel] {
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--cream);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:300;
+  padding:12px 16px;
+  outline:none;
+  transition:border-color .2s;
+}
+input:focus { border-color:var(--amber-dim); }
+input::placeholder { color:var(--cream-dim); opacity:.35; }
+label {
+  display:block;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  margin-bottom:6px;
+}
+.field { margin-bottom:20px; }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.field-hint { font-size:12px; color:var(--cream-dim); margin-top:5px; opacity:.55; }
+/* PARSING STATE */
+.parsing-overlay {
+  border:1px solid var(--border);
+  background:var(--surface);
+  padding:48px 40px;
+  text-align:center;
+}
+.parsing-spinner {
+  width:40px; height:40px;
+  border:2px solid var(--border);
+  border-top-color:var(--amber);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin:0 auto 24px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.parsing-title {
+  font-family:'DM Serif Display',serif;
+  font-size:24px;
+  font-weight:400;
+  margin-bottom:8px;
+}
+.parsing-status {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--amber);
+}
+.parsing-log {
+  margin-top:24px;
+  text-align:left;
+  max-height:120px;
+  overflow:hidden;
+}
+.log-line {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--cream-dim);
+  padding:3px 0;
+  opacity:0;
+  animation:logIn .3s ease forwards;
+}
+@keyframes logIn { to { opacity:.6; } }
+/* CONFIRMATION CARDS */
+.confirm-grid { display:flex; flex-direction:column; gap:16px; margin-bottom:40px; }
+.confirm-card {
+  border:1px solid var(--border);
+  background:var(--surface);
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.confirm-card.confirmed { border-color:var(--green); }
+.confirm-card.editing { border-color:var(--amber); }
+.card-header {
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+}
+.card-header:hover { background:var(--surface-3); }
+.card-label {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.card-status {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  padding:4px 10px;
+}
+.status-ai { color:var(--amber); background:var(--amber-glow); }
+.status-confirmed { color:var(--green); background:var(--green-dim); }
+.status-editing { color:var(--amber); }
+.card-body { padding:20px; }
+.card-value { font-size:14px; color:var(--cream); line-height:1.6; }
+.card-edit-area { margin-top:12px; }
+.card-actions { display:flex; gap:8px; margin-top:16px; }
+/* ACHIEVEMENT CARDS */
+.achievement-card {
+  border:1px solid var(--border);
+  background:var(--surface);
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.achievement-card.included { border-color:var(--green); }
+.achievement-card.excluded { opacity:.4; border-color:var(--border); }
+.ach-header {
+  padding:14px 18px;
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  cursor:pointer;
+}
+.ach-toggle {
+  width:20px; height:20px;
+  border:1px solid var(--border);
+  flex-shrink:0;
+  margin-top:1px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .15s;
+}
+.achievement-card.included .ach-toggle {
+  background:var(--green);
+  border-color:var(--green);
+}
+.ach-toggle::after {
+  content:'';
+  width:10px; height:6px;
+  border-left:1.5px solid var(--black);
+  border-bottom:1.5px solid var(--black);
+  transform:rotate(-45deg) translateY(-1px);
+  opacity:0;
+}
+.achievement-card.included .ach-toggle::after { opacity:1; }
+.ach-content { flex:1; }
+.ach-company {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:4px;
+}
+.ach-text { font-size:14px; color:var(--cream); line-height:1.55; }
+.ach-metric {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--green);
+  margin-top:6px;
+}
+.ach-edit-btn {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 8px;
+  transition:color .2s;
+  flex-shrink:0;
+}
+.ach-edit-btn:hover { color:var(--amber); }
+.ach-edit-area {
+  padding:0 18px 16px 52px;
+  display:none;
+}
+.ach-edit-area.open { display:block; }
+.ach-edit-area textarea { min-height:70px; margin-bottom:8px; }
+/* SKILL SUGGESTIONS */
+.skill-section { margin-bottom:32px; }
+.skill-section-title {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.ai-badge {
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:.08em;
+  color:var(--amber);
+  background:var(--amber-glow);
+  padding:2px 8px;
+}
+.skill-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.skill-tag {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.05em;
+  padding:7px 14px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:all .15s;
+  user-select:none;
+  color:var(--cream-dim);
+}
+.skill-tag:hover { border-color:var(--amber-dim); color:var(--cream); }
+.skill-tag.selected { border-color:var(--amber); color:var(--amber); background:var(--amber-glow); }
+.add-skill-inline {
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+.add-skill-inline input { flex:1; }
+.add-skill-inline button {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  background:var(--surface-3);
+  border:1px solid var(--border);
+  color:var(--cream-dim);
+  padding:0 16px;
+  cursor:pointer;
+  transition:all .2s;
+  white-space:nowrap;
+}
+.add-skill-inline button:hover { border-color:var(--amber-dim); color:var(--cream); }
+/* DIFFERENTIATOR */
+.diff-card {
+  border:1px solid var(--border);
+  background:var(--surface);
+  padding:16px 18px;
+  margin-bottom:8px;
+  cursor:pointer;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  transition:all .15s;
+}
+.diff-card:hover { border-color:var(--amber-dim); }
+.diff-card.selected { border-color:var(--amber); background:var(--amber-glow); }
+.diff-radio {
+  width:16px; height:16px;
+  border:1px solid var(--border);
+  border-radius:50%;
+  flex-shrink:0;
+  margin-top:2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .15s;
+}
+.diff-card.selected .diff-radio {
+  border-color:var(--amber);
+  background:var(--amber);
+}
+.diff-card.selected .diff-radio::after {
+  content:'';
+  width:6px; height:6px;
+  background:var(--black);
+  border-radius:50%;
+}
+.diff-text { font-size:14px; color:var(--cream-dim); line-height:1.55; }
+.diff-card.selected .diff-text { color:var(--cream); }
+/* OPPORTUNITY SCORING */
+.opp-input-area { margin-bottom:32px; }
+.opp-input-area textarea { min-height:180px; }
+.score-result {
+  border:1px solid var(--border);
+  background:var(--surface);
+  overflow:hidden;
+  animation:phaseIn .35s ease;
+}
+.score-header {
+  padding:24px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+}
+.score-company {
+  font-family:'DM Serif Display',serif;
+  font-size:22px;
+  font-weight:400;
+}
+.score-role { font-size:14px; color:var(--cream-dim); margin-top:2px; }
+.score-circle {
+  width:72px; height:72px;
+  border-radius:50%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border:2px solid var(--border);
+  flex-shrink:0;
+}
+.score-circle.high { border-color:var(--green); background:var(--green-dim); }
+.score-circle.medium { border-color:var(--yellow); background:var(--yellow-dim); }
+.score-circle.low { border-color:var(--red); background:var(--red-dim); }
+.score-num {
+  font-family:'DM Serif Display',serif;
+  font-size:28px;
+  line-height:1;
+}
+.score-circle.high .score-num { color:var(--green); }
+.score-circle.medium .score-num { color:var(--yellow); }
+.score-circle.low .score-num { color:var(--red); }
+.score-label {
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+}
+.score-body { padding:24px 28px; }
+.score-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.score-chip {
+  padding:10px 14px;
+  border:1px solid var(--border);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.chip-icon { font-size:14px; }
+.chip-content {}
+.chip-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--cream-dim); }
+.chip-value { font-size:13px; margin-top:2px; }
+.chip-value.ok { color:var(--green); }
+.chip-value.warn { color:var(--yellow); }
+.chip-value.bad { color:var(--red); }
+.score-reasons { margin-bottom:20px; }
+.score-reasons-title {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  margin-bottom:12px;
+}
+.reason-item {
+  display:flex;
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+  line-height:1.5;
+}
+.reason-item:last-child { border-bottom:none; }
+.reason-icon { flex-shrink:0; margin-top:1px; }
+.reason-text { color:var(--cream-dim); }
+.reason-text strong { color:var(--cream); font-weight:400; }
+.score-verdict {
+  padding:16px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  font-size:14px;
+  line-height:1.6;
+  color:var(--cream-dim);
+}
+.score-verdict strong { color:var(--cream); font-weight:400; }
+.score-actions { display:flex; gap:10px; margin-top:20px; }
+.score-another { margin-top:28px; padding-top:24px; border-top:1px solid var(--border); }
+.score-another-title {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--cream-dim);
+  margin-bottom:12px;
+}
+/* BUTTONS */
+.btn {
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:13px 28px;
+  border:none;
+  cursor:pointer;
+  transition:all .2s;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.btn-primary { background:var(--amber); color:var(--black); }
+.btn-primary:hover { background:#e8a030; transform:translateY(-1px); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+.btn-ghost { background:none; border:1px solid var(--border); color:var(--cream-dim); }
+.btn-ghost:hover { border-color:var(--cream-dim); color:var(--cream); }
+.btn-confirm { background:none; border:1px solid var(--green); color:var(--green); font-size:10px; padding:8px 16px; }
+.btn-confirm:hover { background:var(--green-dim); }
+.btn-edit { background:none; border:1px solid var(--border); color:var(--cream-dim); font-size:10px; padding:8px 16px; }
+.btn-edit:hover { border-color:var(--amber-dim); color:var(--cream); }
+.btn-sm { padding:8px 16px; font-size:10px; }
+.phase-nav {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:56px;
+  padding-top:28px;
+  border-top:1px solid var(--border);
+}
+/* COMPLETE */
+.complete-wrap { text-align:center; padding:80px 0; }
+.complete-mark {
+  width:72px; height:72px;
+  border:2px solid var(--green);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 32px;
+  font-size:28px;
+  color:var(--green);
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.complete-title { font-family:'DM Serif Display',serif; font-size:42px; font-weight:400; margin-bottom:12px; }
+.complete-title em { font-style:italic; color:var(--green); }
+.complete-desc { font-size:15px; color:var(--cream-dim); max-width:480px; margin:0 auto 40px; line-height:1.7; }
+.next-steps-list { text-align:left; border:1px solid var(--border); max-width:520px; margin:0 auto; }
+.next-step {
+  display:flex;
+  gap:18px;
+  padding:18px 22px;
+  border-bottom:1px solid var(--border);
+}
+.next-step:last-child { border-bottom:none; }
+.next-num { font-family:'DM Mono',monospace; font-size:10px; color:var(--amber); letter-spacing:.1em; padding-top:1px; min-width:24px; }
+.next-body {}
+.next-title { font-size:14px; color:var(--cream); margin-bottom:2px; }
+.next-sub { font-size:12px; color:var(--cream-dim); line-height:1.5; }
+/* ERROR */
+.error-msg { font-family:'DM Mono',monospace; font-size:11px; color:var(--red); padding:10px 14px; border:1px solid var(--red); background:var(--red-dim); margin-top:12px; display:none; }
+.error-msg.show { display:block; }
+/* FILE LIST */
+.file-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.file-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  font-size:13px;
+}
+.file-item-icon { font-size:14px; flex-shrink:0; }
+.file-item-name { flex:1; color:var(--cream-dim); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.04em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-item-status {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  flex-shrink:0;
+}
+.file-item-status.processing { color:var(--amber); }
+.file-item-status.done { color:var(--green); }
+.file-item-status.error { color:var(--red); }
+.file-mini-spinner {
+  width:12px; height:12px;
+  border:1px solid var(--border);
+  border-top-color:var(--amber);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+  flex-shrink:0;
+}
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav { padding:0 20px; }
+  .nav-steps { display:none; }
+  .main { padding:40px 20px 80px; }
+  .field-row { grid-template-columns:1fr; }
+  .score-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">CareerSwarm</div>
+  <div class="nav-steps">
+    <div class="nav-step active" id="nav1">01 Upload</div>
+    <div class="nav-step" id="nav2">02 Confirm</div>
+    <div class="nav-step" id="nav3">03 Achievements</div>
+    <div class="nav-step" id="nav4">04 Skills</div>
+    <div class="nav-step" id="nav5">05 Score Roles</div>
+  </div>
+</nav>
+<div class="main">
+  <!-- PHASE 1: UPLOAD -->
+  <div class="phase active" id="phase1">
+    <div class="phase-header">
+      <div class="phase-eyebrow">Phase 01 — Resume Upload</div>
+      <h1 class="phase-title">Upload your resume.<br><em>AI does the rest.</em></h1>
+      <p class="phase-desc">Paste your resume text below — all versions if you have them. The system extracts every achievement, metric, and skill, then pre-fills your entire profile. You review and confirm, not type from scratch.</p>
+    </div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+      <div class="upload-icon">⬆</div>
+      <div class="upload-label">Drop your resume files here</div>
+      <div class="upload-sub">PDF · Word (.docx, .doc) · Text · Markdown — multiple files supported</div>
+      <input type="file" id="fileInput" class="upload-file-input" multiple
+        accept=".pdf,.doc,.docx,.txt,.md,.rtf"
+        onchange="handleFileSelect(this)">
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <div class="or-divider">or paste directly</div>
+    <div class="field">
+      <label>Resume Text — paste all versions, separated by "---"</label>
+      <textarea id="resumeText" rows="14" placeholder="Paste your resume content here. Include everything: job titles, companies, dates, achievements with numbers, skills, certifications. The more complete, the richer your Career DNA database.
+If you have multiple resume versions tailored for different roles, paste them all separated by ---
+The AI will extract and consolidate across all versions."></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="inputName" placeholder="James Knight">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="inputEmail" placeholder="you@email.com">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>LinkedIn URL</label>
+        <input type="text" id="inputLinkedin" placeholder="linkedin.com/in/yourname">
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="inputLocation" placeholder="Salt Lake City, UT">
+      </div>
+    </div>
+    <div id="parseError" class="error-msg">Please paste your resume text or upload a file before continuing.</div>
+    <div class="phase-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="startParsing()">Parse My Resume →</button>
+    </div>
+  </div>
+  <!-- PARSING OVERLAY -->
+  <div class="phase" id="phaseLoading">
+    <div class="parsing-overlay">
+      <div class="parsing-spinner"></div>
+      <div class="parsing-title">Building your Career DNA</div>
+      <div class="parsing-status" id="parsingStatus">Analyzing resume text...</div>
+      <div class="parsing-log" id="parsingLog"></div>
+    </div>
+  </div>
+  <!-- PHASE 2: CONFIRM PROFILE -->
+  <div class="phase" id="phase2">
+    <div class="phase-header">
+      <div class="phase-eyebrow">Phase 02 — Profile Confirmation</div>
+      <h1 class="phase-title">AI extracted your<br><em>profile. Confirm it.</em></h1>
+      <p class="phase-desc">Review what the system found. Click any section to edit. Confirm each one when it looks right.</p>
+    </div>
+    <div class="confirm-grid" id="confirmCards"></div>
+    <div id="confirmError" class="error-msg">Please confirm all sections before continuing.</div>
+    <div class="phase-nav">
+      <button class="btn btn-ghost" onclick="goToPhase(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goToPhase(3)">Continue to Achievements →</button>
+    </div>
+  </div>
+  <!-- PHASE 3: ACHIEVEMENTS -->
+  <div class="phase" id="phase3">
+    <div class="phase-header">
+      <div class="phase-eyebrow">Phase 03 — Proof Points</div>
+      <h1 class="phase-title">Your top achievements,<br><em>extracted and ranked.</em></h1>
+      <p class="phase-desc">The AI found these achievements across your career and formatted them in Google XYZ format. Check the ones to include in your Career DNA. Edit any that need sharpening.</p>
+    </div>
+    <div id="achievementsList"></div>
+    <div class="phase-nav">
+      <button class="btn btn-ghost" onclick="goToPhase(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goToPhase(4)">Continue to Skills →</button>
+    </div>
+  </div>
+  <!-- PHASE 4: SKILLS -->
+  <div class="phase" id="phase4">
+    <div class="phase-header">
+      <div class="phase-eyebrow">Phase 04 — Skills & Differentiators</div>
+      <h1 class="phase-title">Confirm your skills.<br><em>Choose your edge.</em></h1>
+      <p class="phase-desc">The AI identified these skills from your resume. Select the ones that are accurate and current. Then choose the differentiator that best describes what makes you different from every candidate with your title.</p>
+    </div>
+    <div id="skillsSections"></div>
+    <div style="margin-bottom:32px;">
+      <div class="skill-section-title" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--cream-dim);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        Your Core Differentiator
+        <span class="ai-badge">AI Suggested</span>
+      </div>
+      <p style="font-size:13px;color:var(--cream-dim);margin-bottom:16px;line-height:1.6;">This becomes the hook in your professional summary and opens every cover letter. Choose the one that's most true and most compelling for the roles you're targeting.</p>
+      <div id="differentiators"></div>
+    </div>
+    <div class="phase-nav">
+      <button class="btn btn-ghost" onclick="goToPhase(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goToPhase(5)">Continue to Scoring →</button>
+    </div>
+  </div>
+  <!-- PHASE 5: SCORE OPPORTUNITIES -->
+  <div class="phase" id="phase5">
+    <div class="phase-header">
+      <div class="phase-eyebrow">Phase 05 — Opportunity Scoring</div>
+      <h1 class="phase-title">Paste a role.<br><em>Get a score.</em></h1>
+      <p class="phase-desc">The Qualifier Agent evaluates each opportunity against your Career DNA and hard criteria. Scores every dimension: location, comp, role fit, gap risk. Tells you exactly why to apply or skip.</p>
+    </div>
+    <div class="opp-input-area">
+      <div class="field">
+        <label>Job Description — paste the full posting</label>
+        <textarea id="jdText" rows="10" placeholder="Paste the complete job description here. Include title, company overview, responsibilities, requirements, and compensation if listed. The Qualifier Agent reads every line."></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Company Name (optional)</label>
+          <input type="text" id="jdCompany" placeholder="RunPod">
+        </div>
+        <div class="field">
+          <label>Role Title (optional)</label>
+          <input type="text" id="jdRole" placeholder="Head of Partnerships">
+        </div>
+      </div>
+      <div id="scoreError" class="error-msg">Please paste a job description to score.</div>
+      <button class="btn btn-primary" onclick="scoreOpportunity()" id="scoreBtn">Score This Role →</button>
+    </div>
+    <div id="scoreLoading" style="display:none" class="parsing-overlay">
+      <div class="parsing-spinner"></div>
+      <div class="parsing-title">Qualifying the opportunity...</div>
+      <div class="parsing-status">Checking location, comp, role fit, and gap risk</div>
+    </div>
+    <div id="scoreResults"></div>
+    <div class="phase-nav" style="margin-top:40px;">
+      <button class="btn btn-ghost" onclick="goToPhase(4)">← Back</button>
+      <button class="btn btn-primary" onclick="finishOnboarding()">Finish & Submit →</button>
+    </div>
+  </div>
+  <!-- COMPLETE -->
+  <div class="phase" id="phaseComplete">
+    <div class="complete-wrap">
+      <div class="complete-mark">✓</div>
+      <h2 class="complete-title">Career DNA<br><em>locked in.</em></h2>
+      <p class="complete-desc">Your profile, achievements, skills, and scored opportunities are ready. James will receive your brief and deliver your first application package within 24 hours.</p>
+      <div class="next-steps-list">
+        <div class="next-step">
+          <div class="next-num">01</div>
+          <div class="next-body">
+            <div class="next-title">Check your email</div>
+            <div class="next-sub">Confirmation + Google Drive link to upload your PDF resume files for document formatting</div>
+          </div>
+        </div>
+        <div class="next-step">
+          <div class="next-num">02</div>
+          <div class="next-body">
+            <div class="next-title">Package arrives within 24 hours</div>
+            <div class="next-sub">ATS resume, cover letter with real company data, hiring manager outreach — all tailored to your top scored opportunity</div>
+          </div>
+        </div>
+        <div class="next-step">
+          <div class="next-num">03</div>
+          <div class="next-body">
+            <div class="next-title">Apply within 24 hours of posting</div>
+            <div class="next-sub">First 50 applicants get 80% of interviews. The system is built around this constraint.</div>
+          </div>
+        </div>
+        <div class="next-step">
+          <div class="next-num">04</div>
+          <div class="next-body">
+            <div class="next-title">Give us honest feedback</div>
+            <div class="next-sub">You're shaping the product. What lands, what misses, what to build next.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  resumeText: '',
+  name: '', email: '', linkedin: '', location: '',
+  profile: null,
+  achievements: [],
+  skills: {},
+  differentiator: '',
+  scoredOpportunities: []
+};
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function goToPhase(n) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  const phaseMap = {1:'phase1',2:'phase2',3:'phase3',4:'phase4',5:'phase5','loading':'phaseLoading','complete':'phaseComplete'};
+  const id = typeof n === 'string' ? phaseMap[n] : phaseMap[n];
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-step').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if (typeof n === 'number') {
+      if (i+1 < n) s.classList.add('done');
+      if (i+1 === n) s.classList.add('active');
+    }
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+const FILE_ICONS = {
+  pdf: '📄', docx: '📝', doc: '📝', txt: '📃', md: '📃', rtf: '📃', default: '📎'
+};
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.add('drag');
+}
+function handleDragLeave(e) {
+  document.getElementById('uploadZone').classList.remove('drag');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  processFiles(e.dataTransfer.files);
+}
+function handleFileSelect(input) {
+  processFiles(input.files);
+}
+function addFileItem(name, ext) {
+  const list = document.getElementById('fileList');
+  const icon = FILE_ICONS[ext] || FILE_ICONS.default;
+  const id = 'fi-' + name.replace(/\W/g, '_');
+  const el = document.createElement('div');
+  el.className = 'file-item';
+  el.id = id;
+  el.innerHTML = `
+    <span class="file-item-icon">${icon}</span>
+    <span class="file-item-name">${name}</span>
+    <span class="file-mini-spinner" id="spin-${id}"></span>
+    <span class="file-item-status processing" id="status-${id}">Extracting</span>
+  `;
+  list.appendChild(el);
+  return id;
+}
+function markFileDone(itemId, ok, msg) {
+  const spin = document.getElementById('spin-' + itemId);
+  const status = document.getElementById('status-' + itemId);
+  if (spin) spin.remove();
+  if (status) {
+    status.textContent = ok ? 'Extracted' : 'Failed';
+    status.className = 'file-item-status ' + (ok ? 'done' : 'error');
+  }
+  if (!ok && msg) {
+    const el = document.getElementById(itemId);
+    if (el) {
+      const note = document.createElement('span');
+      note.style.cssText = 'font-size:11px;color:var(--red);margin-left:4px;';
+      note.textContent = msg;
+      el.appendChild(note);
+    }
+  }
+}
+function appendResumeText(text) {
+  const ta = document.getElementById('resumeText');
+  ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n---\n\n' : '') + text.trim();
+}
+async function extractPDF(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(content.items.map(item => item.str).join(' '));
+  }
+  return pages.join('\n');
+}
+async function extractDOCX(file) {
+  const buffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  return result.value;
+}
+function extractTXT(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+async function processFiles(fileList) {
+  document.getElementById('parseError').classList.remove('show');
+  for (const file of Array.from(fileList)) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const itemId = addFileItem(file.name, ext);
+    try {
+      let text = '';
+      if (ext === 'pdf') {
+        if (typeof pdfjsLib === 'undefined') throw new Error('PDF library not loaded');
+        text = await extractPDF(file);
+      } else if (ext === 'docx') {
+        if (typeof mammoth === 'undefined') throw new Error('DOCX library not loaded');
+        text = await extractDOCX(file);
+      } else if (ext === 'doc') {
+        try { text = await extractDOCX(file); }
+        catch { throw new Error('.doc format — please save as .docx and re-upload'); }
+      } else if (['txt', 'md', 'rtf'].includes(ext)) {
+        text = await extractTXT(file);
+      } else {
+        throw new Error('Unsupported format');
+      }
+      if (!text.trim()) throw new Error('No text extracted — file may be image-based');
+      appendResumeText(text);
+      markFileDone(itemId, true);
+    } catch (err) {
+      markFileDone(itemId, false, err.message);
+    }
+  }
+}
+// ─── CLAUDE API ───────────────────────────────────────────────────────────────
+async function callClaude(userContent, systemPrompt) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }]
+    })
+  });
+  const data = await resp.json();
+  return data.content[0].text;
+}
+function parseJSON(raw) {
+  try {
+    const clean = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch(e) {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw e;
+  }
+}
+// ─── PHASE 1 → PARSING ───────────────────────────────────────────────────────
+async function startParsing() {
+  const text = document.getElementById('resumeText').value.trim();
+  if (!text) { document.getElementById('parseError').classList.add('show'); return; }
+  document.getElementById('parseError').classList.remove('show');
+  state.resumeText = text;
+  state.name = document.getElementById('inputName').value.trim();
+  state.email = document.getElementById('inputEmail').value.trim();
+  state.linkedin = document.getElementById('inputLinkedin').value.trim();
+  state.location = document.getElementById('inputLocation').value.trim();
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phaseLoading').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  const log = document.getElementById('parsingLog');
+  const status = document.getElementById('parsingStatus');
+  function addLog(msg) {
+    const el = document.createElement('div');
+    el.className = 'log-line';
+    el.textContent = '› ' + msg;
+    log.appendChild(el);
+  }
+  try {
+    addLog('Extracting career history and role timeline...');
+    status.textContent = 'Parsing career history...';
+    const profileRaw = await callClaude(
+      `Extract structured profile from this resume:\n\n${text}`,
+      `You are a career data extraction system. Extract a JSON profile from the resume.
+Return ONLY valid JSON with this exact structure:
+{
+  "currentTitle": "most recent job title",
+  "yearsExp": "X+ years",
+  "industries": ["list", "of", "industries"],
+  "targetTitles": ["Head of Partnerships", "VP Partnerships", etc based on career trajectory],
+  "summary": "2-sentence professional summary using their actual career facts",
+  "superpower": "one-sentence unique value proposition based on their strongest proof points",
+  "companies": [
+    {"name":"company","title":"title","dates":"start-end","stage":"startup/growth/enterprise"}
+  ],
+  "compRange": {"minBase": "$X", "minOTE": "$X based on seniority"},
+  "searchCriteria": {
+    "locationPreference": ["Remote", "Hybrid"],
+    "exclusions": "list any obvious exclusions based on stated preferences"
+  }
+}
+Be specific. Use real data from the resume. No placeholders.`
+    );
+    addLog('Career history parsed. Extracting achievements...');
+    status.textContent = 'Mining achievements and metrics...';
+    const achRaw = await callClaude(
+      `Extract all quantified achievements from this resume:\n\n${text}`,
+      `You are a career achievement extraction system. Extract every quantified achievement.
+Return ONLY valid JSON:
+{
+  "achievements": [
+    {
+      "company": "company name",
+      "title": "their title there",
+      "what": "what they accomplished",
+      "metric": "the quantified result (%, $, scale)",
+      "how": "how they did it",
+      "timeframe": "how long it took",
+      "impact": "high/medium/low based on metric size",
+      "formatted": "Google XYZ: Accomplished [what] as measured by [metric], by [how]"
+    }
+  ]
+}
+Extract EVERY achievement with a number. Rank by impact (highest metrics first).
+Format each in Google XYZ format. Be specific with real numbers from the resume.`
+    );
+    addLog('Achievements extracted. Analyzing skills profile...');
+    status.textContent = 'Building skills taxonomy...';
+    const skillsRaw = await callClaude(
+      `Extract all skills from this resume:\n\n${text}`,
+      `Extract skills and differentiators from the resume.
+Return ONLY valid JSON:
+{
+  "crm": ["Salesforce", "HubSpot", etc],
+  "ai": ["ChatGPT", "Claude", etc],
+  "partnerTypes": ["Channel/VARs", "MSPs", etc],
+  "domain": ["GTM Strategy", "Partner Enablement", etc],
+  "tools": ["Tableau", "Excel", etc],
+  "certifications": ["CSM", etc],
+  "awards": ["Presidents Club", etc],
+  "differentiators": [
+    "1-2 sentence differentiator option 1 — the most compelling angle",
+    "1-2 sentence differentiator option 2 — alternate angle",
+    "1-2 sentence differentiator option 3 — technical/AI angle if applicable"
+  ]
+}
+Base differentiators on actual career facts. Make them specific and memorable.`
+    );
+    addLog('Skills taxonomy complete. Building profile...');
+    status.textContent = 'Assembling Career DNA...';
+    state.profile = parseJSON(profileRaw);
+    const achData = parseJSON(achRaw);
+    state.achievements = achData.achievements.map((a, i) => ({ ...a, included: true, id: i }));
+    state.skills = parseJSON(skillsRaw);
+    await new Promise(r => setTimeout(r, 600));
+    addLog('Career DNA database complete.');
+    renderConfirmCards();
+    goToPhase(2);
+  } catch(err) {
+    status.textContent = 'Error parsing resume. Please try again.';
+    addLog('Error: ' + err.message);
+    console.error(err);
+  }
+}
+// ─── PHASE 2: CONFIRM CARDS ───────────────────────────────────────────────────
+function renderConfirmCards() {
+  const p = state.profile;
+  const cards = [
+    {
+      id: 'identity',
+      label: 'Identity & Contact',
+      value: `${state.name || p.currentTitle} · ${state.email} · ${state.linkedin} · ${state.location}`,
+      editFields: [
+        {label:'Full Name', id:'cf-name', val: state.name},
+        {label:'Email', id:'cf-email', val: state.email},
+        {label:'LinkedIn', id:'cf-linkedin', val: state.linkedin},
+        {label:'Location', id:'cf-location', val: state.location}
+      ]
+    },
+    {
+      id: 'career',
+      label: 'Career Overview',
+      value: `${p.currentTitle} · ${p.yearsExp} · Industries: ${p.industries?.join(', ')}`
+    },
+    {
+      id: 'summary',
+      label: 'Professional Summary',
+      value: p.summary,
+      editable: true,
+      editKey: 'summary'
+    },
+    {
+      id: 'superpower',
+      label: 'Your Superpower',
+      value: p.superpower,
+      editable: true,
+      editKey: 'superpower'
+    },
+    {
+      id: 'targets',
+      label: 'Target Roles',
+      value: p.targetTitles?.join(' · '),
+      editable: true,
+      editKey: 'targetTitles_str'
+    },
+    {
+      id: 'comp',
+      label: 'Compensation Floor',
+      value: `Base: ${p.compRange?.minBase} · OTE: ${p.compRange?.minOTE}`
+    }
+  ];
+  const container = document.getElementById('confirmCards');
+  container.innerHTML = cards.map(card => `
+    <div class="confirm-card" id="card-${card.id}">
+      <div class="card-header" onclick="toggleCardEdit('${card.id}')">
+        <div class="card-label">${card.label}</div>
+        <span class="card-status status-ai" id="status-${card.id}">AI Extracted</span>
+      </div>
+      <div class="card-body">
+        <div class="card-value" id="val-${card.id}">${card.value || ''}</div>
+        <div class="card-edit-area" id="edit-${card.id}" style="display:none">
+          ${card.editable ? `<textarea id="editta-${card.id}" rows="3">${card.value || ''}</textarea>` : ''}
+          ${card.editFields ? card.editFields.map(f => `
+            <div class="field" style="margin-bottom:10px">
+              <label>${f.label}</label>
+              <input type="text" id="${f.id}" value="${f.val || ''}">
+            </div>
+          `).join('') : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-confirm" onclick="confirmCard('${card.id}', event)">Confirm</button>
+          <button class="btn btn-edit" onclick="toggleCardEdit('${card.id}', event)">Edit</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleCardEdit(id, e) {
+  if (e) e.stopPropagation();
+  const editArea = document.getElementById('edit-'+id);
+  editArea.style.display = editArea.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('card-'+id).classList.toggle('editing', editArea.style.display !== 'none');
+}
+function confirmCard(id, e) {
+  if (e) e.stopPropagation();
+  const editTa = document.getElementById('editta-'+id);
+  if (editTa && state.profile) {
+    const key = id === 'summary' ? 'summary' : id === 'superpower' ? 'superpower' : 'targetTitles_str';
+    state.profile[key] = editTa.value;
+  }
+  document.getElementById('edit-'+id).style.display = 'none';
+  document.getElementById('status-'+id).textContent = 'Confirmed';
+  document.getElementById('status-'+id).className = 'card-status status-confirmed';
+  document.getElementById('card-'+id).classList.remove('editing');
+  document.getElementById('card-'+id).classList.add('confirmed');
+}
+// ─── PHASE 3: ACHIEVEMENTS ────────────────────────────────────────────────────
+function renderAchievements() {
+  const container = document.getElementById('achievementsList');
+  container.innerHTML = state.achievements.map((a, i) => `
+    <div class="achievement-card included" id="ach-${i}">
+      <div class="ach-header">
+        <div class="ach-toggle" onclick="toggleAchievement(${i})"></div>
+        <div class="ach-content">
+          <div class="ach-company">${a.company} · ${a.title}${a.timeframe ? ' · '+a.timeframe : ''}</div>
+          <div class="ach-text">${a.formatted || a.what}</div>
+          ${a.metric ? `<div class="ach-metric">↑ ${a.metric}</div>` : ''}
+        </div>
+        <button class="ach-edit-btn" onclick="toggleAchEdit(${i})">Edit</button>
+      </div>
+      <div class="ach-edit-area" id="ach-edit-${i}">
+        <textarea id="ach-ta-${i}" rows="3">${a.formatted || a.what}</textarea>
+        <div class="field" style="margin-bottom:8px">
+          <label>Metric / Result</label>
+          <input type="text" id="ach-metric-${i}" value="${a.metric || ''}">
+        </div>
+        <button class="btn btn-sm btn-confirm" onclick="saveAchEdit(${i})">Save</button>
+      </div>
+    </div>
+  `).join('');
+  if (state.achievements.length === 0) {
+    container.innerHTML = '<div style="color:var(--cream-dim);font-size:14px;padding:24px;border:1px solid var(--border)">No quantified achievements found. Add them manually below.</div>';
+  }
+}
+function toggleAchievement(i) {
+  state.achievements[i].included = !state.achievements[i].included;
+  const card = document.getElementById('ach-'+i);
+  card.classList.toggle('included', state.achievements[i].included);
+  card.classList.toggle('excluded', !state.achievements[i].included);
+}
+function toggleAchEdit(i) {
+  document.getElementById('ach-edit-'+i).classList.toggle('open');
+}
+function saveAchEdit(i) {
+  state.achievements[i].formatted = document.getElementById('ach-ta-'+i).value;
+  state.achievements[i].metric = document.getElementById('ach-metric-'+i).value;
+  document.getElementById('ach-edit-'+i).classList.remove('open');
+  document.querySelector('#ach-'+i+' .ach-text').textContent = state.achievements[i].formatted;
+  document.querySelector('#ach-'+i+' .ach-metric').textContent = '↑ ' + state.achievements[i].metric;
+}
+// ─── PHASE 4: SKILLS ──────────────────────────────────────────────────────────
+function renderSkills() {
+  const s = state.skills;
+  const sections = [
+    { key:'crm', label:'CRM & Sales Tools', skills: s.crm || [] },
+    { key:'ai', label:'AI & Technical Tools', skills: s.ai || [] },
+    { key:'domain', label:'Domain Expertise', skills: s.domain || [] },
+    { key:'partnerTypes', label:'Partnership Types', skills: s.partnerTypes || [] },
+    { key:'tools', label:'Analytics & Operations', skills: s.tools || [] },
+    { key:'certifications', label:'Certifications & Awards', skills: [...(s.certifications||[]), ...(s.awards||[])] }
+  ];
+  const container = document.getElementById('skillsSections');
+  container.innerHTML = sections.filter(sec => sec.skills.length > 0).map(sec => `
+    <div class="skill-section" id="sec-${sec.key}">
+      <div class="skill-section-title">
+        ${sec.label}
+        <span class="ai-badge">AI Extracted</span>
+      </div>
+      <div class="skill-tags" id="tags-${sec.key}">
+        ${sec.skills.map(skill => `
+          <div class="skill-tag selected" onclick="toggleSkill(this, '${sec.key}', '${skill.replace(/'/g,"\\'")}')">
+            ${skill}
+          </div>
+        `).join('')}
+      </div>
+      <div class="add-skill-inline">
+        <input type="text" placeholder="Add a skill..." id="add-${sec.key}">
+        <button onclick="addSkill('${sec.key}')">+ Add</button>
+      </div>
+    </div>
+  `).join('');
+  const diffs = s.differentiators || ['No differentiators extracted — add one manually.'];
+  document.getElementById('differentiators').innerHTML = diffs.map((d, i) => `
+    <div class="diff-card${i===0?' selected':''}" onclick="selectDiff(this, '${d.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <div class="diff-radio"></div>
+      <div class="diff-text">${d}</div>
+    </div>
+  `).join('');
+  state.differentiator = diffs[0] || '';
+}
+function toggleSkill(el) { el.classList.toggle('selected'); }
+function addSkill(sectionKey) {
+  const input = document.getElementById('add-'+sectionKey);
+  const val = input.value.trim();
+  if (!val) return;
+  const tag = document.createElement('div');
+  tag.className = 'skill-tag selected';
+  tag.textContent = val;
+  tag.onclick = () => tag.classList.toggle('selected');
+  document.getElementById('tags-'+sectionKey).appendChild(tag);
+  input.value = '';
+}
+function selectDiff(el, text) {
+  document.querySelectorAll('.diff-card').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  state.differentiator = text;
+}
+// ─── PHASE 5: OPPORTUNITY SCORING ─────────────────────────────────────────────
+async function scoreOpportunity() {
+  const jd = document.getElementById('jdText').value.trim();
+  if (!jd) { document.getElementById('scoreError').classList.add('show'); return; }
+  document.getElementById('scoreError').classList.remove('show');
+  const company = document.getElementById('jdCompany').value.trim();
+  const role = document.getElementById('jdRole').value.trim();
+  document.getElementById('scoreBtn').disabled = true;
+  document.getElementById('scoreLoading').style.display = 'block';
+  const profileContext = `
+CANDIDATE PROFILE:
+Name: ${state.name || state.profile?.currentTitle}
+Current Title: ${state.profile?.currentTitle}
+Experience: ${state.profile?.yearsExp}
+Location: ${state.location}
+Industries: ${state.profile?.industries?.join(', ')}
+Superpower: ${state.profile?.superpower}
+Target Comp: Base ${state.profile?.compRange?.minBase}+, OTE ${state.profile?.compRange?.minOTE}+
+TOP ACHIEVEMENTS:
+${state.achievements.filter(a=>a.included).slice(0,5).map(a=>`- ${a.company}: ${a.metric}`).join('\n')}
+SKILLS: ${state.skills.domain?.join(', ')} | AI: ${state.skills.ai?.join(', ')}
+HARD EXCLUSIONS:
+- Must be remote or ${state.location} area
+- Must meet minimum comp thresholds
+- No SDR/BDR management, affiliate/DSP, or non-partnership roles
+  `;
+  try {
+    const raw = await callClaude(
+      `Score this job opportunity:\n\n${jd}`,
+      `You are the CareerSwarm Qualifier Agent. Score a job opportunity for a specific candidate.
+Return ONLY valid JSON:
+{
+  "score": 0-100,
+  "company": "company name from JD",
+  "role": "role title from JD",
+  "locationStatus": "Remote|Hybrid|On-site|Unclear",
+  "locationOk": true/false,
+  "locationNote": "specific note about location fit",
+  "compEstimate": "$X-$Y OTE estimated",
+  "compOk": true/false,
+  "compNote": "specific note about compensation fit",
+  "roleType": "Channel|Strategic Alliances|BD|Technical|Other",
+  "roleFit": "Strong|Good|Weak|Skip",
+  "companyStage": "Series A/B/C/Public/Unknown",
+  "reasons": [
+    {"icon":"✓","text":"specific reason this is a fit — reference actual JD text"},
+    {"icon":"✓","text":"another fit reason"},
+    {"icon":"⚠","text":"a concern or gap to be aware of"},
+    {"icon":"✗","text":"a disqualifier if any — or omit this if none"}
+  ],
+  "verdict": "2-3 sentence verdict explaining the score and whether to apply, with specific reasoning.",
+  "applyRecommendation": "Apply Now|Apply This Week|Research First|Skip"
+}
+Be direct and specific. Reference actual text from the job description.
+CANDIDATE PROFILE:
+${profileContext}`
+    );
+    const result = parseJSON(raw);
+    result.jd = jd;
+    state.scoredOpportunities.push(result);
+    renderScoreResult(result);
+  } catch(err) {
+    console.error(err);
+    document.getElementById('scoreLoading').style.display = 'none';
+    document.getElementById('scoreBtn').disabled = false;
+    document.getElementById('scoreError').textContent = 'Scoring failed. Please try again.';
+    document.getElementById('scoreError').classList.add('show');
+  }
+}
+function renderScoreResult(r) {
+  document.getElementById('scoreLoading').style.display = 'none';
+  document.getElementById('scoreBtn').disabled = false;
+  const scoreClass = r.score >= 75 ? 'high' : r.score >= 50 ? 'medium' : 'low';
+  const recColor = r.applyRecommendation === 'Apply Now' ? 'ok' : r.applyRecommendation === 'Skip' ? 'bad' : 'warn';
+  const el = document.createElement('div');
+  el.className = 'score-result';
+  el.style.marginBottom = '24px';
+  el.innerHTML = `
+    <div class="score-header">
+      <div>
+        <div class="score-company">${r.company || document.getElementById('jdCompany').value || 'Company'}</div>
+        <div class="score-role">${r.role || document.getElementById('jdRole').value || 'Role'}</div>
+      </div>
+      <div class="score-circle ${scoreClass}">
+        <div class="score-num">${r.score}</div>
+        <div class="score-label">Match</div>
+      </div>
+    </div>
+    <div class="score-body">
+      <div class="score-grid">
+        <div class="score-chip">
+          <div class="chip-icon">${r.locationOk ? '📍' : '⚠'}</div>
+          <div class="chip-content">
+            <div class="chip-label">Location</div>
+            <div class="chip-value ${r.locationOk ? 'ok' : 'bad'}">${r.locationStatus} · ${r.locationOk ? 'Compatible' : 'Conflict'}</div>
+          </div>
+        </div>
+        <div class="score-chip">
+          <div class="chip-icon">${r.compOk ? '💰' : '⚠'}</div>
+          <div class="chip-content">
+            <div class="chip-label">Compensation</div>
+            <div class="chip-value ${r.compOk ? 'ok' : 'warn'}">${r.compEstimate}</div>
+          </div>
+        </div>
+        <div class="score-chip">
+          <div class="chip-icon">🎯</div>
+          <div class="chip-content">
+            <div class="chip-label">Role Fit</div>
+            <div class="chip-value ${r.roleFit === 'Strong' ? 'ok' : r.roleFit === 'Weak' || r.roleFit === 'Skip' ? 'bad' : 'warn'}">${r.roleFit} · ${r.roleType}</div>
+          </div>
+        </div>
+        <div class="score-chip">
+          <div class="chip-icon">🚀</div>
+          <div class="chip-content">
+            <div class="chip-label">Recommendation</div>
+            <div class="chip-value ${recColor}">${r.applyRecommendation}</div>
+          </div>
+        </div>
+      </div>
+      <div class="score-reasons">
+        <div class="score-reasons-title">Scoring Breakdown</div>
+        ${r.reasons.map(reason => `
+          <div class="reason-item">
+            <div class="reason-icon">${reason.icon}</div>
+            <div class="reason-text">${reason.text}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="score-verdict"><strong>Verdict:</strong> ${r.verdict}</div>
+      <div class="score-actions">
+        <button class="btn btn-sm btn-primary" onclick="buildPackage('${r.company}','${r.role}')">Build Application Package</button>
+        <button class="btn btn-sm btn-ghost">Save to Pipeline</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('scoreResults').appendChild(el);
+  document.getElementById('jdText').value = '';
+  document.getElementById('jdCompany').value = '';
+  document.getElementById('jdRole').value = '';
+}
+function buildPackage(company, role) {
+  const briefData = {
+    name: state.name, email: state.email, linkedin: state.linkedin, location: state.location,
+    profile: state.profile,
+    achievements: state.achievements.filter(a => a.included),
+    skills: state.skills,
+    differentiator: state.differentiator,
+    targetRole: role, targetCompany: company,
+    scoredOpportunities: state.scoredOpportunities
+  };
+  const body = `CareerSwarm Beta Intake
+======================
+Candidate: ${briefData.name}
+Email: ${briefData.email}
+LinkedIn: ${briefData.linkedin}
+Location: ${briefData.location}
+TARGET ROLE: ${briefData.targetCompany} - ${briefData.targetRole}
+PROFILE:
+Title: ${briefData.profile?.currentTitle}
+Experience: ${briefData.profile?.yearsExp}
+Superpower: ${briefData.profile?.superpower}
+Summary: ${briefData.profile?.summary}
+TOP ACHIEVEMENTS:
+${briefData.achievements.slice(0,7).map((a,i)=>`${i+1}. ${a.formatted||a.what} (${a.metric})`).join('\n')}
+SKILLS:
+CRM: ${briefData.skills.crm?.join(', ')}
+AI/Tech: ${briefData.skills.ai?.join(', ')}
+Domain: ${briefData.skills.domain?.join(', ')}
+Partner Types: ${briefData.skills.partnerTypes?.join(', ')}
+Awards: ${briefData.skills.awards?.join(', ')}
+Certs: ${briefData.skills.certifications?.join(', ')}
+DIFFERENTIATOR:
+${briefData.differentiator}
+SCORED OPPORTUNITIES:
+${briefData.scoredOpportunities.map(o=>`- ${o.company} ${o.role}: ${o.score}/100 - ${o.applyRecommendation}`).join('\n')}
+JOB DESCRIPTION FOR TARGET ROLE:
+${briefData.scoredOpportunities.find(o=>o.company===company)?.jd || 'See attached'}`;
+  const subject = `CareerSwarm Build Package - ${state.name} - ${company} ${role}`;
+  window.location.href = `mailto:jknight3@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+// ─── PHASE TRANSITIONS ─────────────────────────────────────────────────────────
+const _goToPhase = goToPhase;
+function goToPhase(n) {
+  if (n === 3) renderAchievements();
+  if (n === 4) renderSkills();
+  _goToPhase(n);
+}
+function finishOnboarding() {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phaseComplete').classList.add('active');
+  document.querySelectorAll('.nav-step').forEach(s => s.classList.add('done'));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
