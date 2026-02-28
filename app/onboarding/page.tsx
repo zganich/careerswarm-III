@@ -520,7 +520,7 @@ function PhaseSkills({
     { key: 'certifications', label: 'Certifications & Awards' },
   ] as const
 
-  const diffs = (state.profile?.skills as string[] | undefined) || [
+  const diffs = ((state.profile as Record<string, unknown>)?.skills as string[] | undefined) || [
     state.skills?.domain?.[0]
       ? `${state.skills.domain[0]} specialist with ${state.profile?.years_experience} building high-performance partner ecosystems.`
       : 'Executive with a track record of building partner revenue from zero to scale.',

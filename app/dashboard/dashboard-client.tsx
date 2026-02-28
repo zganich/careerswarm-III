@@ -383,7 +383,8 @@ function PipelineTab({ applications }: { applications: Record<string, unknown>[]
 
   const counts = applications.reduce((acc, a) => {
     const s = a.status as ApplicationStatus
-    acc[s] = (acc[s] || 0) + 1
+    const prev: number = typeof acc[s] === 'number' ? acc[s] : 0
+    acc[s] = prev + 1
     return acc
   }, {} as Record<ApplicationStatus, number>)
 
@@ -505,9 +506,9 @@ function DNATab({
                 {a.company as string} · {a.title as string}
               </div>
               <p className="text-sm text-[#f0ebe0] leading-relaxed">{a.formatted as string}</p>
-              {a.metric && (
-                <p className="font-mono text-[11px] text-[#27ae60] mt-1.5">↑ {a.metric as string}</p>
-              )}
+              {a.metric != null ? (
+                <p className="font-mono text-[11px] text-[#27ae60] mt-1.5">↑ {String(a.metric)}</p>
+              ) : null}
             </div>
           ))}
         </div>
