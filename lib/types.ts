@@ -183,6 +183,7 @@ export interface OnboardingState {
   achievements: (Omit<Achievement, 'id' | 'user_id' | 'created_at'> & { tempId: string })[]
 
   // Step 4 — Skills & Differentiator
+  differentiators: string[]
   skills: {
     crm: string[]
     ai: string[]
@@ -204,6 +205,7 @@ export interface ParseResumeResponse {
   profile: Partial<CareerDNA>
   achievements: OnboardingState['achievements']
   skills: OnboardingState['skills']
+  differentiators: string[]
 }
 
 export interface GenerateApplicationResponse {

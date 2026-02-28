@@ -32,8 +32,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // Redirect logged-in users away from auth pages
-  if (pathname.startsWith('/auth') && user) {
+  // Redirect logged-in users away from auth pages (except reset-password — needs session)
+  if (pathname.startsWith('/auth') && !pathname.startsWith('/auth/reset-password') && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
 
@@ -14,8 +15,21 @@ interface Props {
   applications: Record<string, unknown>[]
 }
 
-export default function DashboardClient({ user, userData, dna, achievements, applications }: Props) {
+export default function DashboardClient({ user, userData, dna, achievements, applications: initialApplications }: Props) {
   const [tab, setTab] = useState<Tab>('generate')
+  const [applications, setApplications] = useState(initialApplications)
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/auth/login'
+  }
+
+  function handleStatusUpdate(applicationId: string, newStatus: ApplicationStatus) {
+    setApplications((prev) =>
+      prev.map((a) => (a.id === applicationId ? { ...a, status: newStatus } : a))
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -23,7 +37,6 @@ export default function DashboardClient({ user, userData, dna, achievements, app
       <nav className="sticky top-0 z-50 bg-[rgba(8,8,8,0.95)] backdrop-blur border-b border-[#252525] px-10 flex items-center justify-between h-14">
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
         <div className="flex items-center gap-6">
-          {/* Credits badge */}
           {userData.subscription_status === 'free' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#a09080]">
               <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
@@ -32,9 +45,12 @@ export default function DashboardClient({ user, userData, dna, achievements, app
           {userData.subscription_status === 'pro' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">Pro · Unlimited</div>
           )}
-          <a href="/auth/login" className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors">
+          <button
+            onClick={handleSignOut}
+            className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors"
+          >
             Sign Out
-          </a>
+          </button>
         </div>
       </nav>
 
@@ -78,7 +94,7 @@ export default function DashboardClient({ user, userData, dna, achievements, app
           <GenerateTab dna={dna} achievements={achievements} userData={userData} />
         )}
         {tab === 'pipeline' && (
-          <PipelineTab applications={applications} />
+          <PipelineTab applications={applications} onStatusUpdate={handleStatusUpdate} />
         )}
         {tab === 'dna' && (
           <DNATab dna={dna} achievements={achievements} />
@@ -103,11 +119,14 @@ function GenerateTab({
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
   const [jobUrl, setJobUrl] = useState('')
+  const [hiringManagerName, setHiringManagerName] = useState('')
+  const [hiringManagerTitle, setHiringManagerTitle] = useState('')
   const [step, setStep] = useState<'input' | 'scoring' | 'scored' | 'generating' | 'done'>('input')
   const [score, setScore] = useState<OpportunityScore | null>(null)
   const [result, setResult] = useState<GenerateApplicationResponse | null>(null)
   const [activeDoc, setActiveDoc] = useState<'resume' | 'cover' | 'outreach'>('resume')
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   async function handleScore() {
     if (!jd.trim()) { setError('Paste a job description to score.'); return }
@@ -143,7 +162,14 @@ function GenerateTab({
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription: jd, companyName: company, roleTitle: role, jobUrl }),
+        body: JSON.stringify({
+          jobDescription: jd,
+          companyName: company,
+          roleTitle: role,
+          jobUrl,
+          hiringManagerName: hiringManagerName || undefined,
+          hiringManagerTitle: hiringManagerTitle || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -157,7 +183,16 @@ function GenerateTab({
 
   function reset() {
     setJd(''); setCompany(''); setRole(''); setJobUrl('')
+    setHiringManagerName(''); setHiringManagerTitle('')
     setStep('input'); setScore(null); setResult(null); setError('')
+  }
+
+  async function handleCopy() {
+    if (!result) return
+    const text = activeDoc === 'resume' ? result.resume : activeDoc === 'cover' ? result.coverLetter : result.outreachMessage
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const scoreClass =
@@ -184,9 +219,11 @@ function GenerateTab({
             {[
               { label: 'Company Name', value: company, set: setCompany, placeholder: 'RunPod' },
               { label: 'Role Title', value: role, set: setRole, placeholder: 'Head of Partnerships' },
-              { label: 'Job URL (optional)', value: jobUrl, set: setJobUrl, placeholder: 'https://...' },
+              { label: 'Job URL (optional)', value: jobUrl, set: setJobUrl, placeholder: 'https://...', full: true },
+              { label: 'Hiring Manager Name (optional)', value: hiringManagerName, set: setHiringManagerName, placeholder: 'Alex Chen' },
+              { label: 'Hiring Manager Title (optional)', value: hiringManagerTitle, set: setHiringManagerTitle, placeholder: 'VP Sales' },
             ].map((f) => (
-              <div key={f.label} className={f.label.includes('URL') ? 'col-span-2' : ''}>
+              <div key={f.label} className={(f as { full?: boolean }).full ? 'col-span-2' : ''}>
                 <label className="block font-mono text-[10px] tracking-[0.15em] uppercase text-[#a09080] mb-1.5">
                   {f.label}
                 </label>
@@ -222,7 +259,6 @@ function GenerateTab({
 
       {step === 'scored' && score && (
         <div className="phase-in">
-          {/* Score Card */}
           <div className="border border-[#252525] bg-[#111] mb-6 overflow-hidden">
             <div className="flex items-center justify-between p-6 bg-[#1a1a1a] border-b border-[#252525]">
               <div>
@@ -302,7 +338,6 @@ function GenerateTab({
 
       {step === 'done' && result && (
         <div className="phase-in">
-          {/* Score summary */}
           <div className="flex items-center gap-4 mb-8 p-4 border border-[#252525] bg-[#111]">
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">
               ATS Score: {result.atsScore}/100
@@ -322,7 +357,6 @@ function GenerateTab({
             </div>
           </div>
 
-          {/* Doc tabs */}
           <div className="flex border-b border-[#252525] mb-5">
             {([
               { key: 'resume', label: 'Resume' },
@@ -349,13 +383,10 @@ function GenerateTab({
               {activeDoc === 'outreach' && result.outreachMessage}
             </pre>
             <button
-              onClick={() => {
-                const text = activeDoc === 'resume' ? result.resume : activeDoc === 'cover' ? result.coverLetter : result.outreachMessage
-                navigator.clipboard.writeText(text)
-              }}
+              onClick={handleCopy}
               className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
             >
-              Copy
+              {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
@@ -375,8 +406,19 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   withdrawn: 'text-[#a09080]',
 }
 
-function PipelineTab({ applications }: { applications: Record<string, unknown>[] }) {
+const ALL_STATUSES: ApplicationStatus[] = ['generated', 'submitted', 'interviewing', 'offer', 'rejected', 'withdrawn']
+
+function PipelineTab({
+  applications,
+  onStatusUpdate,
+}: {
+  applications: Record<string, unknown>[]
+  onStatusUpdate: (id: string, status: ApplicationStatus) => void
+}) {
   const [filter, setFilter] = useState<ApplicationStatus | 'all'>('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [activeDoc, setActiveDoc] = useState<'resume' | 'cover' | 'outreach'>('resume')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const filtered =
     filter === 'all' ? applications : applications.filter((a) => a.status === filter)
@@ -387,9 +429,30 @@ function PipelineTab({ applications }: { applications: Record<string, unknown>[]
     return acc
   }, {})
 
+  async function updateStatus(applicationId: string, newStatus: ApplicationStatus) {
+    setUpdatingId(applicationId)
+    try {
+      const res = await fetch('/api/update-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId, status: newStatus }),
+      })
+      if (!res.ok) throw new Error('Failed to update status')
+      onStatusUpdate(applicationId, newStatus)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  function toggleExpand(id: string) {
+    setExpandedId(expandedId === id ? null : id)
+    setActiveDoc('resume')
+  }
+
   return (
     <div className="phase-in">
-      {/* Status filters */}
       <div className="flex flex-wrap gap-2 mb-8">
         {(['all', 'generated', 'submitted', 'interviewing', 'offer', 'rejected'] as const).map((s) => (
           <button
@@ -413,27 +476,101 @@ function PipelineTab({ applications }: { applications: Record<string, unknown>[]
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {filtered.map((app) => (
-            <div key={app.id as string} className="border border-[#252525] bg-[#111] p-5 flex items-center gap-5">
-              <div className="flex-1 min-w-0">
-                <div className="font-serif text-lg font-normal mb-0.5">{app.company_name as string}</div>
-                <div className="text-sm text-[#a09080]">{app.role_title as string}</div>
+          {filtered.map((app) => {
+            const appId = app.id as string
+            const isExpanded = expandedId === appId
+            const isUpdating = updatingId === appId
+
+            return (
+              <div key={appId} className="border border-[#252525] bg-[#111] overflow-hidden">
+                {/* Row */}
+                <div className="p-5 flex items-center gap-5">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-serif text-lg font-normal mb-0.5">{app.company_name as string}</div>
+                    <div className="text-sm text-[#a09080]">{app.role_title as string}</div>
+                  </div>
+                  <div className="flex items-center gap-6 flex-shrink-0">
+                    <div className="text-center">
+                      <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] mb-0.5">Fit</div>
+                      <div className="font-serif text-xl text-[#d4922a]">{app.fit_score as number}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] mb-0.5">ATS</div>
+                      <div className="font-serif text-xl text-[#27ae60]">{app.ats_score as number}</div>
+                    </div>
+
+                    {/* Status selector */}
+                    <div className="relative">
+                      <select
+                        value={app.status as string}
+                        disabled={isUpdating}
+                        onChange={(e) => updateStatus(appId, e.target.value as ApplicationStatus)}
+                        className={`font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] px-3 py-2 outline-none cursor-pointer hover:border-[#a09080] transition-colors disabled:opacity-40 ${STATUS_COLORS[app.status as ApplicationStatus]}`}
+                      >
+                        {ALL_STATUSES.map((s) => (
+                          <option key={s} value={s} className="bg-[#1a1a1a] text-[#f0ebe0]">
+                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Expand toggle */}
+                    <button
+                      onClick={() => toggleExpand(appId)}
+                      className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#d4922a] transition-colors border border-[#252525] px-3 py-2 hover:border-[#a09080]"
+                    >
+                      {isExpanded ? 'Collapse' : 'View Docs'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded: document viewer */}
+                {isExpanded && (
+                  <div className="border-t border-[#252525] p-5">
+                    <div className="flex border-b border-[#252525] mb-4">
+                      {([
+                        { key: 'resume', label: 'Resume' },
+                        { key: 'cover', label: 'Cover Letter' },
+                        { key: 'outreach', label: 'Outreach' },
+                      ] as { key: 'resume' | 'cover' | 'outreach'; label: string }[]).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setActiveDoc(key)}
+                          className={`font-mono text-[10px] tracking-[0.1em] uppercase px-4 pb-3 relative transition-colors ${
+                            activeDoc === key ? 'text-[#d4922a]' : 'text-[#a09080] hover:text-[#f0ebe0]'
+                          }`}
+                        >
+                          {label}
+                          {activeDoc === key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d4922a]" />}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <pre className="bg-[#0d0d0d] border border-[#1a1a1a] p-5 font-mono text-xs text-[#f0ebe0] leading-relaxed whitespace-pre-wrap overflow-auto max-h-[500px]">
+                        {activeDoc === 'resume' && (app.resume_text as string)}
+                        {activeDoc === 'cover' && (app.cover_letter_text as string)}
+                        {activeDoc === 'outreach' && (app.outreach_message as string || '—')}
+                      </pre>
+                      <button
+                        onClick={() => {
+                          const text = activeDoc === 'resume'
+                            ? (app.resume_text as string)
+                            : activeDoc === 'cover'
+                            ? (app.cover_letter_text as string)
+                            : (app.outreach_message as string || '')
+                          navigator.clipboard.writeText(text)
+                        }}
+                        className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-6 flex-shrink-0">
-                <div className="text-center">
-                  <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] mb-0.5">Fit</div>
-                  <div className="font-serif text-xl text-[#d4922a]">{app.fit_score as number}</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] mb-0.5">ATS</div>
-                  <div className="font-serif text-xl text-[#27ae60]">{app.ats_score as number}</div>
-                </div>
-                <div className={`font-mono text-[10px] tracking-[0.08em] uppercase ${STATUS_COLORS[app.status as ApplicationStatus]}`}>
-                  {app.status as string}
-                </div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -467,6 +604,18 @@ function DNATab({
 
   return (
     <div className="phase-in">
+      <div className="flex items-center justify-between mb-6">
+        <div className="font-mono text-[10px] tracking-[0.15em] uppercase text-[#a09080]">
+          Your Career DNA
+        </div>
+        <a
+          href="/onboarding"
+          className="font-mono text-[10px] tracking-[0.08em] uppercase border border-[#252525] text-[#a09080] px-4 py-2 hover:border-[#d4922a] hover:text-[#d4922a] transition-colors"
+        >
+          Update Career DNA →
+        </a>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mb-8">
         {sections.map((s) => (
           <div key={s.label} className={`border border-[#252525] bg-[#111] p-5 ${s.label.includes('Summary') || s.label.includes('Differentiator') ? 'col-span-2' : ''}`}>

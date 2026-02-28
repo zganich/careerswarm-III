@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         certifications: (skills.certifications as string[]) || [],
         awards: (skills.awards as string[]) || [],
       },
+      differentiators: (skills.differentiators as string[]) || [],
     }
 
     return NextResponse.json(response)

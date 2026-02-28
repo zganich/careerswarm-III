@@ -91,6 +91,7 @@ function PhaseUpload({
         },
         achievements: data.achievements,
         skills: data.skills,
+        differentiators: data.differentiators || [],
       })
 
       onNext()
@@ -511,6 +512,10 @@ function PhaseSkills({
   onBack: () => void
   onNext: () => void
 }) {
+  // Track which skills the user has toggled OFF — keeps all skills visible so
+  // they can be re-enabled if toggled off by mistake.
+  const [excluded, setExcluded] = useState<Set<string>>(new Set())
+
   const skillSections = [
     { key: 'crm', label: 'CRM & Sales Tools' },
     { key: 'ai', label: 'AI & Technical Tools' },
@@ -520,21 +525,31 @@ function PhaseSkills({
     { key: 'certifications', label: 'Certifications & Awards' },
   ] as const
 
-  const diffs = ((state.profile as Record<string, unknown>)?.skills as string[] | undefined) || [
-    state.skills?.domain?.[0]
-      ? `${state.skills.domain[0]} specialist with ${state.profile?.years_experience} building high-performance partner ecosystems.`
-      : 'Executive with a track record of building partner revenue from zero to scale.',
-  ]
-
-  function toggleSkill(section: keyof OnboardingState['skills'], skill: string) {
-    const current = state.skills[section] as string[]
-    const updated = current.includes(skill)
-      ? current.filter((s) => s !== skill)
-      : [...current, skill]
-    setState({ skills: { ...state.skills, [section]: updated } })
+  function toggleSkill(skill: string) {
+    setExcluded((prev) => {
+      const next = new Set(prev)
+      if (next.has(skill)) next.delete(skill)
+      else next.add(skill)
+      return next
+    })
   }
 
-  const differentiators = (state.profile as Record<string, unknown>)?.differentiators as string[] | undefined
+  const differentiators = state.differentiators
+
+  function handleNext() {
+    // Commit excluded skills by filtering them out of the state before saving
+    const filtered: OnboardingState['skills'] = {
+      crm: (state.skills.crm as string[]).filter((s) => !excluded.has(s)),
+      ai: (state.skills.ai as string[]).filter((s) => !excluded.has(s)),
+      domain: (state.skills.domain as string[]).filter((s) => !excluded.has(s)),
+      partnerTypes: (state.skills.partnerTypes as string[]).filter((s) => !excluded.has(s)),
+      tools: (state.skills.tools as string[]).filter((s) => !excluded.has(s)),
+      certifications: (state.skills.certifications as string[]).filter((s) => !excluded.has(s)),
+      awards: (state.skills.awards as string[]).filter((s) => !excluded.has(s)),
+    }
+    setState({ skills: filtered })
+    onNext()
+  }
 
   return (
     <div className="phase-in">
@@ -560,15 +575,22 @@ function PhaseSkills({
               {label}
             </div>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
-                <button
-                  key={skill}
-                  onClick={() => toggleSkill(key, skill)}
-                  className="font-mono text-[11px] px-3.5 py-2 border border-[#d4922a] text-[#d4922a] bg-[rgba(212,146,42,0.08)] hover:bg-[rgba(212,146,42,0.14)] transition-colors"
-                >
-                  {skill}
-                </button>
-              ))}
+              {skills.map((skill) => {
+                const isExcluded = excluded.has(skill)
+                return (
+                  <button
+                    key={skill}
+                    onClick={() => toggleSkill(skill)}
+                    className={`font-mono text-[11px] px-3.5 py-2 border transition-colors ${
+                      isExcluded
+                        ? 'border-[#252525] text-[#555] bg-transparent line-through'
+                        : 'border-[#d4922a] text-[#d4922a] bg-[rgba(212,146,42,0.08)] hover:bg-[rgba(212,146,42,0.14)]'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )
@@ -613,7 +635,7 @@ function PhaseSkills({
         <button onClick={onBack} className="font-mono text-xs tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors">
           ← Back
         </button>
-        <button onClick={onNext} className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors">
+        <button onClick={handleNext} className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors">
           Save Career DNA →
         </button>
       </div>
@@ -631,6 +653,7 @@ const INITIAL_STATE: OnboardingState = {
   location: '',
   profile: null,
   achievements: [],
+  differentiators: [],
   skills: {
     crm: [],
     ai: [],
