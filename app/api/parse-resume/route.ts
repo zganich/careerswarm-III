@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callClaude, parseJSON, MODELS } from '@/lib/claude'
+
+export const maxDuration = 90
 import { PARSE_RESUME_SYSTEM, PARSE_RESUME_PROMPT } from '@/lib/prompts/parse-resume'
 import { EXTRACT_ACHIEVEMENTS_SYSTEM, EXTRACT_ACHIEVEMENTS_PROMPT } from '@/lib/prompts/extract-achievements'
 import { EXTRACT_SKILLS_SYSTEM, EXTRACT_SKILLS_PROMPT } from '@/lib/prompts/extract-skills'

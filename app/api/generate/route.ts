@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callClaude, parseJSON, MODELS } from '@/lib/claude'
+
+export const maxDuration = 90
 import { TAILOR_RESUME_SYSTEM, TAILOR_RESUME_PROMPT } from '@/lib/prompts/tailor-resume'
 import { COVER_LETTER_SYSTEM, COVER_LETTER_PROMPT } from '@/lib/prompts/cover-letter'
 import { OUTREACH_SYSTEM, OUTREACH_PROMPT } from '@/lib/prompts/outreach'
