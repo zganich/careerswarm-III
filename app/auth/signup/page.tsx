@@ -11,6 +11,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
   const supabase = createClient()
 
   async function handleSignup(e: React.FormEvent) {
@@ -35,18 +37,44 @@ export default function SignupPage() {
     }
   }
 
+  async function handleResend() {
+    setResending(true)
+    setResent(false)
+    await supabase.auth.resend({ type: 'signup', email })
+    setResending(false)
+    setResent(true)
+  }
+
   if (done) {
     return (
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-6">
         <div className="max-w-sm text-center">
-          <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#d4922a] mb-6">
+          <Link href="/" className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#d4922a] mb-6 inline-block no-underline">
             CareerSwarm
-          </div>
+          </Link>
           <h1 className="font-serif text-4xl font-normal mb-4">Check your email</h1>
-          <p className="text-sm text-[#a09080] leading-relaxed">
+          <p className="text-sm text-[#a09080] leading-relaxed mb-2">
             We sent a confirmation link to <strong className="text-[#f0ebe0]">{email}</strong>.
             Click it to verify your account and start building your Career DNA.
           </p>
+          <p className="text-xs text-[#6b6055] font-mono mb-8">
+            Can&apos;t find it? Check your spam or junk folder.
+          </p>
+
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="w-full border border-[#252525] text-[#a09080] font-mono text-[10px] tracking-[0.08em] uppercase py-3 hover:border-[#d4922a] hover:text-[#d4922a] transition-colors disabled:opacity-40 mb-3"
+          >
+            {resending ? 'Sending...' : resent ? 'Sent! Check your inbox' : 'Resend confirmation email'}
+          </button>
+
+          <Link
+            href="/auth/login"
+            className="block w-full font-mono text-[10px] tracking-[0.08em] uppercase text-[#6b6055] hover:text-[#a09080] transition-colors py-2"
+          >
+            Already verified? Sign in →
+          </Link>
         </div>
       </div>
     )
@@ -128,8 +156,12 @@ export default function SignupPage() {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
-          <p className="text-[11px] text-[#a09080] text-center font-mono leading-relaxed">
-            Free plan: 3 tailored resumes/month. No credit card required.
+          <p className="text-[10px] text-[#6b6055] text-center font-mono leading-relaxed">
+            By creating an account you agree to our{' '}
+            <Link href="/terms" className="hover:text-[#a09080] transition-colors underline">Terms</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="hover:text-[#a09080] transition-colors underline">Privacy Policy</Link>.
+            {' '}Free plan · No credit card required.
           </p>
         </form>
       </div>

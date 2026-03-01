@@ -132,6 +132,10 @@ export default function LandingPage() {
             Early access.<br /><em style={{fontStyle:'italic',color:'#d4922a'}}>Permanent discount.</em>
           </h2>
           <p style={{fontSize:17,color:'#a09080'}}>Founding members lock in pricing that never changes. Limited to the first 20 members.</p>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,marginTop:16,background:'rgba(212,146,42,0.08)',border:'1px solid rgba(212,146,42,0.25)',padding:'8px 16px'}}>
+            <span style={{width:6,height:6,background:'#d4922a',borderRadius:'50%',display:'inline-block',flexShrink:0}} />
+            <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,letterSpacing:'0.08em',color:'#d4922a',textTransform:'uppercase'}}>Only 17 of 20 founding spots remaining</span>
+          </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24,maxWidth:800}}>
           {/* Free */}
