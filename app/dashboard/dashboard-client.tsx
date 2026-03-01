@@ -16,6 +16,20 @@ async function redirectToPortal() {
   if (data.url) window.location.href = data.url
 }
 
+function downloadTxt(text: string, filename: string) {
+  const blob = new Blob([text], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function toSlug(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
 type Tab = 'generate' | 'pipeline' | 'dna'
 
 interface Props {
@@ -256,6 +270,13 @@ function GenerateTab({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function handleDownload() {
+    if (!result) return
+    const text = activeDoc === 'resume' ? result.resume : activeDoc === 'cover' ? result.coverLetter : result.outreachMessage
+    const docLabel = activeDoc === 'resume' ? 'resume' : activeDoc === 'cover' ? 'cover-letter' : 'outreach'
+    downloadTxt(text, `${toSlug(company)}-${toSlug(role)}-${docLabel}.txt`)
+  }
+
   const scoreClass =
     score && score.score >= 75 ? 'text-[#27ae60]' :
     score && score.score >= 50 ? 'text-[#f39c12]' : 'text-[#c0392b]'
@@ -458,12 +479,20 @@ function GenerateTab({
               {activeDoc === 'cover' && result.coverLetter}
               {activeDoc === 'outreach' && result.outreachMessage}
             </pre>
-            <button
-              onClick={handleCopy}
-              className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+            <div className="absolute top-3 right-3 flex gap-2">
+              <button
+                onClick={handleDownload}
+                className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+              >
+                Download .txt
+              </button>
+              <button
+                onClick={handleCopy}
+                className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -628,19 +657,35 @@ function PipelineTab({
                         {activeDoc === 'cover' && (app.cover_letter_text as string)}
                         {activeDoc === 'outreach' && (app.outreach_message as string || '—')}
                       </pre>
-                      <button
-                        onClick={() => {
-                          const text = activeDoc === 'resume'
-                            ? (app.resume_text as string)
-                            : activeDoc === 'cover'
-                            ? (app.cover_letter_text as string)
-                            : (app.outreach_message as string || '')
-                          navigator.clipboard.writeText(text)
-                        }}
-                        className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
-                      >
-                        Copy
-                      </button>
+                      <div className="absolute top-3 right-3 flex gap-2">
+                        <button
+                          onClick={() => {
+                            const text = activeDoc === 'resume'
+                              ? (app.resume_text as string)
+                              : activeDoc === 'cover'
+                              ? (app.cover_letter_text as string)
+                              : (app.outreach_message as string || '')
+                            const docLabel = activeDoc === 'resume' ? 'resume' : activeDoc === 'cover' ? 'cover-letter' : 'outreach'
+                            downloadTxt(text, `${toSlug(app.company_name as string)}-${toSlug(app.role_title as string)}-${docLabel}.txt`)
+                          }}
+                          className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+                        >
+                          Download .txt
+                        </button>
+                        <button
+                          onClick={() => {
+                            const text = activeDoc === 'resume'
+                              ? (app.resume_text as string)
+                              : activeDoc === 'cover'
+                              ? (app.cover_letter_text as string)
+                              : (app.outreach_message as string || '')
+                            navigator.clipboard.writeText(text)
+                          }}
+                          className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+                        >
+                          Copy
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
