@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callClaude, parseJSON, MODELS } from '@/lib/claude'
-
-export const maxDuration = 90
 import { PARSE_RESUME_SYSTEM, PARSE_RESUME_PROMPT } from '@/lib/prompts/parse-resume'
 import { EXTRACT_ACHIEVEMENTS_SYSTEM, EXTRACT_ACHIEVEMENTS_PROMPT } from '@/lib/prompts/extract-achievements'
 import { EXTRACT_SKILLS_SYSTEM, EXTRACT_SKILLS_PROMPT } from '@/lib/prompts/extract-skills'
 import { createClient } from '@/lib/supabase/server'
 import type { ParseResumeResponse } from '@/lib/types'
+
+export const maxDuration = 90
 
 export async function POST(req: NextRequest) {
   try {
@@ -74,9 +74,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response)
   } catch (err) {
-    console.error('[parse-resume]', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[parse-resume]', msg)
     return NextResponse.json(
-      { error: 'Failed to parse resume. Please try again.' },
+      { error: `Parse failed: ${msg}` },
       { status: 500 }
     )
   }
