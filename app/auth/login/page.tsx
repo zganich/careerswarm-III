@@ -30,9 +30,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#080808] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="mb-10">
-          <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a] mb-6">
+          <Link href="/" className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a] mb-6 inline-block no-underline">
             CareerSwarm
-          </div>
+          </Link>
           <h1 className="font-serif text-4xl font-normal mb-3">
             Sign in
           </h1>

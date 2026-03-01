@@ -17,9 +17,14 @@ export default function LandingPage() {
       {/* NAV */}
       <nav style={{position:'fixed',top:0,width:'100%',padding:'20px 48px',display:'flex',justifyContent:'space-between',alignItems:'center',zIndex:100,background:'linear-gradient(to bottom, rgba(8,8,8,0.95), transparent)',backdropFilter:'blur(4px)'}}>
         <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,letterSpacing:'0.12em',color:'#d4922a',textTransform:'uppercase'}}>CareerSwarm</div>
-        <Link href="/auth/signup" style={{fontFamily:"'DM Mono',monospace",fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',color:'#080808',background:'#d4922a',padding:'10px 22px',textDecoration:'none'}}>
-          Get Early Access
-        </Link>
+        <div style={{display:'flex',alignItems:'center',gap:24}}>
+          <Link href="/auth/login" style={{fontFamily:"'DM Mono',monospace",fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',color:'#a09080',textDecoration:'none'}}>
+            Sign In
+          </Link>
+          <Link href="/auth/signup" style={{fontFamily:"'DM Mono',monospace",fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',color:'#080808',background:'#d4922a',padding:'10px 22px',textDecoration:'none'}}>
+            Get Early Access
+          </Link>
+        </div>
       </nav>
 
       {/* HERO */}
