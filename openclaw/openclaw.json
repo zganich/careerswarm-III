@@ -1,0 +1,98 @@
+// OpenClaw config for CareerSwarm III development assistant.
+// Copy this file to ~/.openclaw/openclaw.json on your Mac, then run setup.sh.
+// Docs: https://docs.openclaw.ai
+{
+  agents: {
+    defaults: {
+      workspace: "~/careerswarm-III",
+      model: {
+        primary: "anthropic/claude-sonnet-4-6",
+      },
+    },
+    list: [
+      {
+        id: "main",
+        default: true,
+        name: "CareerSwarm Dev",
+        workspace: "~/careerswarm-III",
+        identity: {
+          name: "Claw",
+          emoji: "🦞",
+          theme: "expert senior engineer",
+        },
+        model: "anthropic/claude-sonnet-4-6",
+        tools: {
+          profile: "coding",
+          allow: ["read", "write", "browser"],
+        },
+        systemPrompt: `You are Claw, a senior dev assistant for CareerSwarm III.
+
+PROJECT CONTEXT:
+- Location: ~/careerswarm-III
+- Stack: Next.js 14 App Router, TypeScript strict, Supabase, Tailwind CSS, Stripe
+- Branch: claude/chat-claude-code-integration-BzsLN
+- Production: https://careerswarm.com
+- Key files: CLAUDE.md (read first), app/dashboard/dashboard-client.tsx (hotspot), app/api/generate/route.ts (hotspot), app/onboarding/page.tsx
+
+STRICT RULES:
+1. Always cd ~/careerswarm-III before any command
+2. Read ONLY files the task requires — never explore broadly
+3. After any code change: run npx tsc --noEmit — fix all errors before committing
+4. Before committing: start server (npm run start &) then run: npx playwright test (all 43 must pass)
+5. Commit format: short description, then push to claude/chat-claude-code-integration-BzsLN
+6. Deploy: vercel deploy --prod --token <ask owner for token>
+7. Never install npm packages without asking first
+8. Never touch dashboard-client.tsx and api/generate/route.ts at the same time
+
+COST CONTROL:
+- Use haiku model for questions, file reads, quick lookups
+- Use sonnet (default) for actual code changes
+- Keep responses short — this is Telegram, not a chat window
+- If a task is large, ask for confirmation before starting
+
+When given a task, state what files you will read/edit before doing anything.`,
+      },
+    ],
+  },
+
+  channels: {
+    telegram: {
+      enabled: true,
+      // Get this from @BotFather on Telegram: /newbot
+      botToken: "REPLACE_WITH_YOUR_TELEGRAM_BOT_TOKEN",
+      dmPolicy: "pairing",
+      historyLimit: 30,
+      streaming: "partial",
+    },
+  },
+
+  env: {
+    // Use a SEPARATE Anthropic API key for OpenClaw (not the CareerSwarm production key).
+    // Create one at: https://console.anthropic.com/settings/keys
+    // Set a $30/mo spend cap at: https://console.anthropic.com/settings/limits
+    ANTHROPIC_API_KEY: "REPLACE_WITH_YOUR_OPENCLAW_ANTHROPIC_API_KEY",
+    shellEnv: { enabled: true },
+  },
+
+  session: {
+    scope: "per-sender",
+    reset: {
+      mode: "daily",
+      atHour: 6,
+    },
+  },
+
+  messages: {
+    responsePrefix: "🦞",
+    ackReaction: "👀",
+    queue: {
+      mode: "collect",
+      debounceMs: 800,
+    },
+  },
+
+  logging: {
+    level: "info",
+    consoleStyle: "pretty",
+  },
+}
