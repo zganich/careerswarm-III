@@ -682,17 +682,41 @@ const INITIAL_STATE: OnboardingState = {
 }
 
 const STEPS = ['Upload', 'Confirm', 'Achievements', 'Skills']
+const STORAGE_KEY = 'cs_onboarding_v1'
 
 export default function OnboardingPage() {
   const [phase, setPhase] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [authNotice, setAuthNotice] = useState('')
+  const [draftRestored, setDraftRestored] = useState(false)
   const [state, setStateRaw] = useState<OnboardingState>(INITIAL_STATE)
 
   const setState = useCallback((updates: Partial<OnboardingState>) => {
     setStateRaw((prev) => ({ ...prev, ...updates }))
   }, [])
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const { state: s, phase: p } = JSON.parse(saved)
+        setStateRaw(s)
+        setPhase(p)
+        setDraftRestored(true)
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }, [])
+
+  // Auto-save progress to localStorage whenever state or phase changes
+  useEffect(() => {
+    if (phase > 0 || state.resumeText.trim()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, phase }))
+    }
+  }, [state, phase])
 
   // Detect Supabase auth errors in the URL hash (e.g. expired email link).
   // The middleware never sees the hash, so we handle it client-side.
@@ -728,12 +752,21 @@ export default function OnboardingPage() {
       })
 
       if (!res.ok) throw new Error('Failed to save Career DNA. Please try again.')
+      localStorage.removeItem(STORAGE_KEY)
       window.location.href = '/dashboard'
     } catch (err) {
       console.error(err)
       setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.')
       setSaving(false)
     }
+  }
+
+  async function handleSignOut() {
+    if (phase > 0 || state.resumeText.trim()) {
+      if (!window.confirm('You have unsaved onboarding progress. Sign out anyway?')) return
+    }
+    await fetch('/api/auth/signout', { method: 'POST' })
+    window.location.href = '/auth/login'
   }
 
   return (
@@ -745,13 +778,14 @@ export default function OnboardingPage() {
           {STEPS.map((step, i) => (
             <div
               key={step}
+              onClick={() => i < phase && setPhase(i)}
               className={`font-mono text-[10px] tracking-[0.1em] uppercase px-5 h-14 flex items-center border-r border-[#252525] relative transition-colors ${
                 i === 0 ? 'border-l border-[#252525]' : ''
               } ${
                 i === phase
                   ? 'text-[#d4922a]'
                   : i < phase
-                  ? 'text-[#27ae60] cursor-pointer'
+                  ? 'text-[#27ae60] cursor-pointer hover:text-[#4ecb7e]'
                   : 'text-[#a09080]'
               }`}
             >
@@ -763,16 +797,32 @@ export default function OnboardingPage() {
             </div>
           ))}
           <button
-            onClick={async () => {
-              await fetch('/api/auth/signout', { method: 'POST' })
-              window.location.href = '/auth/login'
-            }}
+            onClick={handleSignOut}
             className="font-mono text-[10px] tracking-[0.1em] uppercase px-5 h-14 flex items-center text-[#a09080] hover:text-[#f0ebe0] transition-colors border-l border-[#252525]"
           >
             Sign Out
           </button>
         </div>
       </nav>
+
+      {draftRestored && (
+        <div className="bg-[rgba(212,146,42,0.06)] border-b border-[#d4922a]/30 px-10 py-2.5 flex items-center justify-between">
+          <span className="font-mono text-[11px] text-[#d4922a]">
+            Resumed from where you left off.
+          </span>
+          <button
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEY)
+              setStateRaw(INITIAL_STATE)
+              setPhase(0)
+              setDraftRestored(false)
+            }}
+            className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors ml-6"
+          >
+            Start fresh ×
+          </button>
+        </div>
+      )}
 
       {authNotice && (
         <div className="bg-[#1a1100] border-b border-[#d4922a]/40 px-10 py-3 flex items-center justify-between">

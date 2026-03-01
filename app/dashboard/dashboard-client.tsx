@@ -385,13 +385,14 @@ function GenerateTab({
           ) : null}
 
           <div className="flex gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={error === '__upgrade__'}
-              className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors disabled:opacity-40"
-            >
-              Generate Full Package →
-            </button>
+            {error !== '__upgrade__' && (
+              <button
+                onClick={handleGenerate}
+                className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors"
+              >
+                Generate Full Package →
+              </button>
+            )}
             <button
               onClick={reset}
               className="border border-[#252525] text-[#a09080] font-mono text-xs tracking-[0.1em] uppercase px-6 py-3.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
