@@ -68,6 +68,9 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 
 - **2026-03-01** — Moved `careerswarm.com` + `www.careerswarm.com` from old `careerswarm` Vercel project to `careerswarm-iii`. Updated `NEXT_PUBLIC_APP_URL` to `https://careerswarm.com`. Redeployed to production.
 - **2026-03-01** — Created this CLAUDE.md file for persistent context across sessions.
+- **2026-03-01** — Created `app/auth/error/page.tsx` — was missing, auth callback was throwing 404 on any failed code exchange (expired links, already-used links). Shows "Link expired" with Sign In + Reset Password CTAs.
+- **2026-03-01** — Full MVP audit completed. Core product (auth, onboarding, generation, pipeline) is complete. Stripe integration is the only major gap. See audit notes: blocking items are Stripe checkout, webhook handler, subscription enforcement, and Stripe env vars in Vercel.
+- **2026-03-01** — MVP task queue: (1) ✅ /auth/error page, (2) Stripe checkout + webhook, (3) Upgrade CTA in dashboard, (4) Subscription check in /api/generate, (5) Resend for email.
 
 ---
 
