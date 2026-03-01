@@ -62,6 +62,9 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 ## Session Log
 - **2026-03-01** — Initial build: full MVP. Auth, onboarding (5-phase), dashboard (Generate/Pipeline/DNA tabs), Career DNA, ATS scorer, Stripe integration (create-checkout, webhook, portal), Resend emails, `app/auth/error/page.tsx`, domain moved from old `careerswarm` → `careerswarm-iii` Vercel project.
 - **2026-03-01** — Stripe TEST MODE wired end-to-end: product/price/webhook created via API, all Stripe env vars set in Vercel, deployed, careerswarm.com live (200).
+- **2026-03-01** — Bug fix: `app/api/parse-resume/route.ts` — guard against undefined `achievements` key in Claude response (`?? []` fallback); added per-call `.catch()` labels on the three parallel Claude extractions so Vercel logs identify which step failed.
+- **2026-03-01** — Bug fix: server-side sign-out. Added `app/api/auth/signout/route.ts` (POST → `supabase.auth.signOut()` server-side); updated `dashboard-client.tsx` to call it instead of browser-side `signOut()`, eliminating middleware race condition where cookie clear hadn't propagated before the redirect.
+- **2026-03-01** — Feature + hardening: onboarding page. Added Sign Out button to nav; CareerSwarm logo → `<Link href="/">`; `useEffect` to detect Supabase `#error=` hash (OTP expired etc.), strip it from URL, show dismissible amber banner; `saveDNA` now surfaces error message instead of silently hiding spinner; `extractText` checks `res.ok` and throws on API failure (file correctly shows red "Failed" instead of green "Extracted" with no text); file size guard (>10 MB rejected); empty `---` separator no longer appended when all file extractions fail. New file: `app/api/auth/signout/route.ts`.
 
 ---
 
