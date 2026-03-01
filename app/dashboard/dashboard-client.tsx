@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
 
@@ -44,8 +43,7 @@ export default function DashboardClient({ user: _user, userData, dna, achievemen
   }
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/signout', { method: 'POST' })
     window.location.href = '/auth/login'
   }
 
