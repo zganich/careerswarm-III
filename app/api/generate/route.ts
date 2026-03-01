@@ -64,63 +64,72 @@ export async function POST(req: NextRequest) {
     const topAchievement = achievements?.[0]?.formatted || ''
 
     // Generate resume, cover letter, and outreach in parallel — Sonnet handles all three
-    const [resumeText, coverLetterText, outreachMessage] = await Promise.all([
-      callClaude({
-        model: MODELS.generation,
-        system: TAILOR_RESUME_SYSTEM,
-        messages: [
-          {
-            role: 'user',
-            content: TAILOR_RESUME_PROMPT({
-              careerDNA: careerDNASummary,
-              achievements: achievementsSummary,
-              jobDescription,
-              companyName,
-              roleTitle,
-              companyResearch,
-            }),
-          },
-        ],
-        maxTokens: 3000,
-      }),
-      callClaude({
-        model: MODELS.generation,
-        system: COVER_LETTER_SYSTEM,
-        messages: [
-          {
-            role: 'user',
-            content: COVER_LETTER_PROMPT({
-              careerDNA: careerDNASummary,
-              topAchievements: achievementsSummary.split('\n').slice(0, 3).join('\n'),
-              jobDescription,
-              companyName,
-              roleTitle,
-              hiringManagerName,
-              companyResearch,
-            }),
-          },
-        ],
-        maxTokens: 800,
-      }),
-      callClaude({
-        model: MODELS.generation,
-        system: OUTREACH_SYSTEM,
-        messages: [
-          {
-            role: 'user',
-            content: OUTREACH_PROMPT({
-              careerDNA: careerDNASummary,
-              topAchievement,
-              companyName,
-              roleTitle,
-              hiringManagerName,
-              hiringManagerTitle,
-              companyResearch,
-            }),
-          },
-        ],
-        maxTokens: 400,
-      }),
+    const GENERATION_TIMEOUT = 90_000 // 90 seconds
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Generation timed out. Please try again.')), GENERATION_TIMEOUT)
+    )
+
+    const [resumeText, coverLetterText, outreachMessage] = await Promise.race([
+      Promise.all([
+        callClaude({
+          model: MODELS.generation,
+          system: TAILOR_RESUME_SYSTEM,
+          messages: [
+            {
+              role: 'user',
+              content: TAILOR_RESUME_PROMPT({
+                careerDNA: careerDNASummary,
+                achievements: achievementsSummary,
+                jobDescription,
+                companyName,
+                roleTitle,
+                companyResearch,
+              }),
+            },
+          ],
+          maxTokens: 3000,
+        }),
+        callClaude({
+          model: MODELS.generation,
+          system: COVER_LETTER_SYSTEM,
+          messages: [
+            {
+              role: 'user',
+              content: COVER_LETTER_PROMPT({
+                careerDNA: careerDNASummary,
+                topAchievements: achievementsSummary.split('\n').slice(0, 3).join('\n'),
+                jobDescription,
+                companyName,
+                roleTitle,
+                hiringManagerName,
+                companyResearch,
+              }),
+            },
+          ],
+          maxTokens: 800,
+        }),
+        callClaude({
+          model: MODELS.generation,
+          system: OUTREACH_SYSTEM,
+          messages: [
+            {
+              role: 'user',
+              content: OUTREACH_PROMPT({
+                careerDNA: careerDNASummary,
+                topAchievement,
+                companyName,
+                roleTitle,
+                hiringManagerName,
+                hiringManagerTitle,
+                companyResearch,
+              }),
+            },
+          ],
+          maxTokens: 400,
+        }),
+      ]),
+      timeoutPromise,
     ])
 
     // Score the generated resume with the real ATS scoring engine

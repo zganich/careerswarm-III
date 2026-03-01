@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+import { sendUpgradeConfirmationEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: 'Payments not configured' }, { status: 503 })
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24.acacia' })
+
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
 
@@ -42,6 +44,19 @@ export async function POST(req: NextRequest) {
             stripe_subscription_id: subscriptionId,
           })
           .eq('id', userId)
+
+        // Send upgrade confirmation email — fire and forget
+        const { data: userData } = await supabase
+          .from('users')
+          .select('email, full_name')
+          .eq('id', userId)
+          .single()
+
+        if (userData?.email) {
+          sendUpgradeConfirmationEmail(userData.email, userData.full_name || '').catch((err) =>
+            console.error('[webhook] upgrade email error:', err)
+          )
+        }
 
         break
       }

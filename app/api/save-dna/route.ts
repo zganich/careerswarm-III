@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,6 +79,15 @@ export async function POST(req: NextRequest) {
       .from('users')
       .update({ onboarding_complete: true })
       .eq('id', user.id)
+
+    // Send welcome email — fire and forget, never block the response
+    const userEmail = profile.email || user.email
+    const userName = profile.name || profile.current_title || ''
+    if (userEmail) {
+      sendWelcomeEmail(userEmail, userName).catch((err) =>
+        console.error('[save-dna] welcome email error:', err)
+      )
+    }
 
     return NextResponse.json({ success: true, dnaId: dna.id })
   } catch (err) {

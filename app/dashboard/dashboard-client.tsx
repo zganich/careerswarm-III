@@ -32,6 +32,16 @@ export default function DashboardClient({ user: _user, userData, dna, achievemen
   const [tab, setTab] = useState<Tab>('generate')
   const [applications, setApplications] = useState(initialApplications)
   const [showUpgradedBanner, setShowUpgradedBanner] = useState(!!upgraded)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+
+  async function handleCheckout() {
+    setCheckoutLoading(true)
+    try {
+      await redirectToCheckout()
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -72,10 +82,11 @@ export default function DashboardClient({ user: _user, userData, dna, achievemen
                 <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
               </div>
               <button
-                onClick={redirectToCheckout}
-                className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#d4922a] text-[#080808] px-3 py-1.5 hover:bg-[#e8a030] transition-colors"
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+                className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#d4922a] text-[#080808] px-3 py-1.5 hover:bg-[#e8a030] transition-colors disabled:opacity-60"
               >
-                Upgrade to Pro →
+                {checkoutLoading ? 'Redirecting...' : 'Upgrade to Pro →'}
               </button>
             </>
           )}
@@ -157,6 +168,7 @@ function GenerateTab({
   achievements: Record<string, unknown>[]
   userData: Record<string, unknown>
 }) {
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [jd, setJd] = useState('')
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
@@ -169,6 +181,15 @@ function GenerateTab({
   const [activeDoc, setActiveDoc] = useState<'resume' | 'cover' | 'outreach'>('resume')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+
+  async function handleCheckout() {
+    setCheckoutLoading(true)
+    try {
+      await redirectToCheckout()
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
 
   async function handleScore() {
     if (!jd.trim()) { setError('Paste a job description to score.'); return }
@@ -352,10 +373,11 @@ function GenerateTab({
                 You&apos;ve used all 3 free resumes. Upgrade to Pro for unlimited generations.
               </div>
               <button
-                onClick={redirectToCheckout}
-                className="flex-shrink-0 bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-5 py-2.5 hover:bg-[#e8a030] transition-colors"
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+                className="flex-shrink-0 bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-5 py-2.5 hover:bg-[#e8a030] transition-colors disabled:opacity-60"
               >
-                Upgrade to Pro →
+                {checkoutLoading ? 'Redirecting...' : 'Upgrade to Pro →'}
               </button>
             </div>
           ) : error ? (
