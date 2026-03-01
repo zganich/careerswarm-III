@@ -2,7 +2,11 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardClient from './dashboard-client'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { upgraded?: string }
+}) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -38,6 +42,7 @@ export default async function DashboardPage() {
       dna={dna}
       achievements={achievements || []}
       applications={applications || []}
+      upgraded={searchParams.upgraded === '1'}
     />
   )
 }

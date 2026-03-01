@@ -5,6 +5,18 @@ import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
 
+async function redirectToCheckout() {
+  const res = await fetch('/api/stripe/create-checkout', { method: 'POST' })
+  const data = await res.json()
+  if (data.url) window.location.href = data.url
+}
+
+async function redirectToPortal() {
+  const res = await fetch('/api/stripe/portal', { method: 'POST' })
+  const data = await res.json()
+  if (data.url) window.location.href = data.url
+}
+
 type Tab = 'generate' | 'pipeline' | 'dna'
 
 interface Props {
@@ -13,11 +25,13 @@ interface Props {
   dna: Record<string, unknown>
   achievements: Record<string, unknown>[]
   applications: Record<string, unknown>[]
+  upgraded?: boolean
 }
 
-export default function DashboardClient({ user, userData, dna, achievements, applications: initialApplications }: Props) {
+export default function DashboardClient({ user: _user, userData, dna, achievements, applications: initialApplications, upgraded }: Props) {
   const [tab, setTab] = useState<Tab>('generate')
   const [applications, setApplications] = useState(initialApplications)
+  const [showUpgradedBanner, setShowUpgradedBanner] = useState(!!upgraded)
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -33,17 +47,45 @@ export default function DashboardClient({ user, userData, dna, achievements, app
 
   return (
     <div className="min-h-screen bg-[#080808]">
+      {/* Upgrade success banner */}
+      {showUpgradedBanner && (
+        <div className="bg-[#27ae60] text-[#080808] px-10 py-3 flex items-center justify-between">
+          <span className="font-mono text-xs tracking-[0.08em]">
+            Welcome to Pro — unlimited resumes and cover letters, forever.
+          </span>
+          <button
+            onClick={() => setShowUpgradedBanner(false)}
+            className="font-mono text-[10px] tracking-[0.08em] uppercase opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[rgba(8,8,8,0.95)] backdrop-blur border-b border-[#252525] px-10 flex items-center justify-between h-14">
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
         <div className="flex items-center gap-6">
           {userData.subscription_status === 'free' && (
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[#a09080]">
-              <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
-            </div>
+            <>
+              <div className="font-mono text-[10px] tracking-[0.08em] text-[#a09080]">
+                <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
+              </div>
+              <button
+                onClick={redirectToCheckout}
+                className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#d4922a] text-[#080808] px-3 py-1.5 hover:bg-[#e8a030] transition-colors"
+              >
+                Upgrade to Pro →
+              </button>
+            </>
           )}
           {userData.subscription_status === 'pro' && (
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">Pro · Unlimited</div>
+            <button
+              onClick={redirectToPortal}
+              className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60] hover:text-[#f0ebe0] transition-colors"
+            >
+              Pro · Unlimited
+            </button>
           )}
           <button
             onClick={handleSignOut}
@@ -153,7 +195,7 @@ function GenerateTab({
 
   async function handleGenerate() {
     if (userData.subscription_status === 'free' && (userData.credits_remaining as number) <= 0) {
-      setError('No credits remaining. Upgrade to Pro.')
+      setError('__upgrade__')
       return
     }
     setStep('generating')
@@ -237,7 +279,7 @@ function GenerateTab({
               </div>
             ))}
           </div>
-          {error && (
+          {error && error !== '__upgrade__' && (
             <div className="font-mono text-xs text-[#c0392b] border border-[#c0392b] bg-[rgba(192,57,43,0.08)] px-3 py-2 mb-4">
               {error}
             </div>
@@ -304,16 +346,29 @@ function GenerateTab({
             </div>
           </div>
 
-          {error && (
+          {error === '__upgrade__' ? (
+            <div className="border border-[#d4922a] bg-[rgba(212,146,42,0.08)] px-5 py-4 mb-4 flex items-center justify-between gap-4">
+              <div className="font-mono text-xs text-[#f0ebe0]">
+                You&apos;ve used all 3 free resumes. Upgrade to Pro for unlimited generations.
+              </div>
+              <button
+                onClick={redirectToCheckout}
+                className="flex-shrink-0 bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-5 py-2.5 hover:bg-[#e8a030] transition-colors"
+              >
+                Upgrade to Pro →
+              </button>
+            </div>
+          ) : error ? (
             <div className="font-mono text-xs text-[#c0392b] border border-[#c0392b] bg-[rgba(192,57,43,0.08)] px-3 py-2 mb-4">
               {error}
             </div>
-          )}
+          ) : null}
 
           <div className="flex gap-3">
             <button
               onClick={handleGenerate}
-              className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors"
+              disabled={error === '__upgrade__'}
+              className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors disabled:opacity-40"
             >
               Generate Full Package →
             </button>

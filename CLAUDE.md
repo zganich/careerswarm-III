@@ -70,7 +70,11 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 - **2026-03-01** — Created this CLAUDE.md file for persistent context across sessions.
 - **2026-03-01** — Created `app/auth/error/page.tsx` — was missing, auth callback was throwing 404 on any failed code exchange (expired links, already-used links). Shows "Link expired" with Sign In + Reset Password CTAs.
 - **2026-03-01** — Full MVP audit completed. Core product (auth, onboarding, generation, pipeline) is complete. Stripe integration is the only major gap. See audit notes: blocking items are Stripe checkout, webhook handler, subscription enforcement, and Stripe env vars in Vercel.
-- **2026-03-01** — MVP task queue: (1) ✅ /auth/error page, (2) Stripe checkout + webhook, (3) Upgrade CTA in dashboard, (4) Subscription check in /api/generate, (5) Resend for email.
+- **2026-03-01** — MVP task queue: (1) ✅ /auth/error page, (2) ✅ Stripe checkout + webhook, (3) ✅ Upgrade CTA in dashboard, (4) ✅ Subscription check in /api/generate, (5) Resend for email.
+- **2026-03-01** — Built full Stripe integration: `app/api/stripe/create-checkout/route.ts` (creates Checkout Session, stores stripe_customer_id), `app/api/stripe/webhook/route.ts` (handles checkout.session.completed + subscription.updated + subscription.deleted), `app/api/stripe/portal/route.ts` (Stripe Customer Portal for billing management). Stripe API version: `2025-02-24.acacia`.
+- **2026-03-01** — Dashboard upgrades: "Upgrade to Pro →" button in nav for free users, upgrade banner on empty-credits error, green "Pro · Unlimited" button (links to portal) for paid users, post-checkout success banner on `?upgraded=1`.
+- **2026-03-01** — `/api/generate` now checks `isPaid = status === 'pro' || status === 'premium'` instead of just checking `status === 'free'`, so future premium tier works without code changes. Credits only decrement for non-paid users.
+- **2026-03-01** — Stripe env vars still needed in Vercel before payments work: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO`. Also must configure Stripe Customer Portal in Stripe Dashboard settings.
 
 ---
 
