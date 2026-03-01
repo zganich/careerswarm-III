@@ -22,23 +22,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Run all three extractions in parallel — Opus for all three since this is
-    // the one-time synthesis that determines the quality of everything downstream.
+    // Run all three extractions in parallel using Sonnet (fast enough for Vercel's
+    // 10s function limit on Hobby plan). Switch to MODELS.synthesis (Opus) if
+    // the project is upgraded to Vercel Pro where maxDuration=90 takes effect.
     const [profileRaw, achievementsRaw, skillsRaw] = await Promise.all([
       callClaude({
-        model: MODELS.synthesis,
+        model: MODELS.generation,
         system: PARSE_RESUME_SYSTEM,
         messages: [{ role: 'user', content: PARSE_RESUME_PROMPT(resumeText) }],
         maxTokens: 2048,
       }).catch((e) => { throw new Error(`profile extraction failed: ${e.message}`) }),
       callClaude({
-        model: MODELS.synthesis,
+        model: MODELS.generation,
         system: EXTRACT_ACHIEVEMENTS_SYSTEM,
         messages: [{ role: 'user', content: EXTRACT_ACHIEVEMENTS_PROMPT(resumeText) }],
         maxTokens: 4096,
       }).catch((e) => { throw new Error(`achievements extraction failed: ${e.message}`) }),
       callClaude({
-        model: MODELS.synthesis,
+        model: MODELS.generation,
         system: EXTRACT_SKILLS_SYSTEM,
         messages: [{ role: 'user', content: EXTRACT_SKILLS_PROMPT(resumeText) }],
         maxTokens: 2048,
@@ -74,10 +75,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response)
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[parse-resume]', msg)
+    console.error('[parse-resume]', err)
     return NextResponse.json(
-      { error: `Parse failed: ${msg}` },
+      { error: 'Failed to parse resume. Please try again.' },
       { status: 500 }
     )
   }

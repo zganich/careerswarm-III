@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callClaude, parseJSON, MODELS } from '@/lib/claude'
-
-export const maxDuration = 60
 import { SCORE_OPPORTUNITY_SYSTEM, SCORE_OPPORTUNITY_PROMPT } from '@/lib/prompts/score-opportunity'
 import { createClient } from '@/lib/supabase/server'
 import type { OpportunityScore } from '@/lib/types'
+
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
