@@ -712,7 +712,7 @@ export default function OnboardingPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[rgba(8,8,8,0.95)] backdrop-blur border-b border-[#252525] px-10 flex items-center justify-between h-14">
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
-        <div className="flex">
+        <div className="flex items-center">
           {STEPS.map((step, i) => (
             <div
               key={step}
@@ -733,6 +733,15 @@ export default function OnboardingPage() {
               )}
             </div>
           ))}
+          <button
+            onClick={async () => {
+              await fetch('/api/auth/signout', { method: 'POST' })
+              window.location.href = '/auth/login'
+            }}
+            className="font-mono text-[10px] tracking-[0.1em] uppercase px-5 h-14 flex items-center text-[#a09080] hover:text-[#f0ebe0] transition-colors border-l border-[#252525]"
+          >
+            Sign Out
+          </button>
         </div>
       </nav>
 
