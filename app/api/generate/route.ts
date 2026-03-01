@@ -3,6 +3,7 @@ import { callClaude, parseJSON, MODELS } from '@/lib/claude'
 import { TAILOR_RESUME_SYSTEM, TAILOR_RESUME_PROMPT } from '@/lib/prompts/tailor-resume'
 import { COVER_LETTER_SYSTEM, COVER_LETTER_PROMPT } from '@/lib/prompts/cover-letter'
 import { OUTREACH_SYSTEM, OUTREACH_PROMPT } from '@/lib/prompts/outreach'
+import { scoreResume } from '@/lib/ats-scorer'
 import { createClient } from '@/lib/supabase/server'
 import type { GenerateApplicationResponse } from '@/lib/types'
 
@@ -120,9 +121,9 @@ export async function POST(req: NextRequest) {
       }),
     ])
 
-    // Score the generated resume for ATS fit
-    const atsScore = Math.floor(Math.random() * 15) + 82 // Placeholder: wire to real ATS scorer
-    const fitScore = Math.floor(Math.random() * 20) + 75
+    // Score the generated resume with the real ATS scoring engine
+    const scoring = scoreResume(jobDescription, resumeText, dna as Record<string, unknown>)
+    const { atsScore, fitScore, keywordsMatched } = scoring
 
     const achievementsUsed = (achievements || [])
       .filter((a) => resumeText.includes(a.company))
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
         outreach_message: outreachMessage,
         fit_score: fitScore,
         ats_score: atsScore,
-        keywords_matched: countKeywordMatches(jobDescription, resumeText),
+        keywords_matched: keywordsMatched,
         apply_recommendation: 'Apply Now',
         achievements_used: achievementsUsed,
       })
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
       outreachMessage,
       fitScore,
       atsScore,
-      keywordsMatched: countKeywordMatches(jobDescription, resumeText),
+      keywordsMatched,
       achievementsUsed,
     }
 
@@ -207,11 +208,3 @@ function formatAchievements(achievements: Record<string, unknown>[]): string {
     .join('\n')
 }
 
-function countKeywordMatches(jd: string, resume: string): number {
-  const words = jd
-    .toLowerCase()
-    .split(/\W+/)
-    .filter((w) => w.length > 5)
-  const resumeLower = resume.toLowerCase()
-  return words.filter((w) => resumeLower.includes(w)).length
-}
