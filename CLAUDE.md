@@ -75,9 +75,18 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 - Pro: unlimited, `isPaid` check in `/api/generate` covers pro + premium
 - Stripe webhook handles activation (checkout.session.completed) and deactivation (subscription.deleted → restore 3 credits)
 
+## Stripe (TEST MODE — as of 2026-03-01)
+- Product: `prod_U48f7gOLwXWeuD` — "CareerSwarm Pro"
+- Price: `price_1T60OZHlPFPXpDEaHnRNoWaj` — $49/month recurring, "Pro Monthly - Founding Rate"
+- Webhook: `we_1T60OhHlPFPXpDEa11w1mMP1` — registered at `https://careerswarm.com/api/stripe/webhook`
+- All Stripe env vars set in Vercel (dev + preview + production)
+- **Currently in TEST MODE** — swap to live keys before accepting real payments
+
 ## Known Issues / Notes
 - Supabase free tier SMTP: 4 emails/hour — must configure Resend SMTP in Supabase dashboard before launch
-- Stripe + Resend env vars not yet set in Vercel — owner needs to add them
+- Stripe is TEST MODE — needs live keys + new live webhook before real payments
+- Resend env var not yet set in Vercel — owner needs to add RESEND_API_KEY
+- Stripe Customer Portal must be enabled in Stripe Dashboard → Settings → Billing → Customer Portal
 
 ---
 
@@ -94,6 +103,7 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 - **2026-03-01** — `/api/generate`: `isPaid` check covers pro + premium, 90s timeout via Promise.race, null guard on userData.
 - **2026-03-01** — Resend transactional email: `lib/email.ts`, welcome email triggered from `/api/save-dna`, upgrade email triggered from Stripe webhook. Graceful no-op if `RESEND_API_KEY` not set.
 - **2026-03-01** — Upgrade button loading state added to dashboard nav and generate error banner.
+- **2026-03-01** — Stripe TEST MODE fully wired: created product (prod_U48f7gOLwXWeuD), price $49/mo (price_1T60OZHlPFPXpDEaHnRNoWaj), webhook endpoint (we_1T60OhHlPFPXpDEa11w1mMP1). All Stripe env vars set in Vercel via API. Deployed to production. careerswarm.com live and returning 200.
 
 ---
 
