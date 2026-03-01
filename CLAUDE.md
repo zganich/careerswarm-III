@@ -59,3 +59,37 @@ Tables: `users`, `career_dna`, `achievements`, `job_postings`, `generated_applic
 ## Known Issues / Notes
 - Supabase free tier SMTP: 4 emails/hour — needs custom SMTP for production scale (password reset emails)
 - `careerswarm.com` was previously pointed at the old `careerswarm` Vercel project — now correctly points to `careerswarm-iii`
+
+---
+
+## Session Log — Key Decisions & Changes
+<!-- Keep this section updated. Add an entry whenever something important is decided, fixed, or changed. -->
+<!-- Format: `YYYY-MM-DD — Description` -->
+
+- **2026-03-01** — Moved `careerswarm.com` + `www.careerswarm.com` from old `careerswarm` Vercel project to `careerswarm-iii`. Updated `NEXT_PUBLIC_APP_URL` to `https://careerswarm.com`. Redeployed to production.
+- **2026-03-01** — Created this CLAUDE.md file for persistent context across sessions.
+
+---
+
+## Instructions for Claude: Keeping This File Current
+
+After every session where something meaningful happens, **update this file before ending**. Specifically:
+
+1. **Add a Session Log entry** (bottom of that section) whenever:
+   - A bug is fixed or a known issue is resolved
+   - A new feature is built or a major change is made
+   - An environment variable, domain, or infrastructure config changes
+   - A database migration or schema change is applied
+   - A decision is made that would affect future work (e.g. "we chose X over Y because...")
+
+2. **Update existing sections** if facts change:
+   - New tables → update the Database section
+   - New key files → update Key Files
+   - New env vars → update Environment Variables
+   - Known issue resolved → remove or annotate it
+
+3. **Commit and push CLAUDE.md** as part of the work, not separately.
+
+4. **Keep entries concise** — one line per event is enough. The goal is a quick orientation, not a full changelog.
+
+This file is read automatically at the start of every Claude Code session. It is the primary mechanism for maintaining context across sessions.
