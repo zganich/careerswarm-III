@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import Link from 'next/link'
 import type { OnboardingState, ParseResumeResponse } from '@/lib/types'
 
 // ─── PHASE COMPONENTS ────────────────────────────────────────────────────────
@@ -18,6 +19,8 @@ function PhaseUpload({
   const [error, setError] = useState('')
   const [files, setFiles] = useState<{ name: string; status: 'processing' | 'done' | 'error' }[]>([])
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+
   async function extractText(file: File): Promise<string> {
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (ext === 'txt' || ext === 'md') {
@@ -27,13 +30,22 @@ function PhaseUpload({
     const fd = new FormData()
     fd.append('file', file)
     const res = await fetch('/api/extract-file', { method: 'POST', body: fd })
+    if (!res.ok) throw new Error('Extraction failed')
     const data = await res.json()
-    return data.text || ''
+    if (!data.text?.trim()) throw new Error('No text could be read from this file')
+    return data.text
   }
 
   async function handleFiles(fileList: FileList) {
     setError('')
     const newFiles = Array.from(fileList)
+
+    const oversized = newFiles.filter((f) => f.size > MAX_FILE_SIZE)
+    if (oversized.length > 0) {
+      setError(`File too large (max 10 MB): ${oversized.map((f) => f.name).join(', ')}`)
+      return
+    }
+
     setFiles(newFiles.map((f) => ({ name: f.name, status: 'processing' as const })))
 
     const texts: string[] = []
@@ -51,12 +63,14 @@ function PhaseUpload({
       }
     }
 
-    const combined = texts.join('\n\n---\n\n')
-    setState({
-      resumeText: state.resumeText
-        ? state.resumeText + '\n\n---\n\n' + combined
-        : combined,
-    })
+    const combined = texts.filter(Boolean).join('\n\n---\n\n')
+    if (combined.trim()) {
+      setState({
+        resumeText: state.resumeText
+          ? state.resumeText + '\n\n---\n\n' + combined
+          : combined,
+      })
+    }
   }
 
   async function handleParse() {
@@ -672,14 +686,28 @@ const STEPS = ['Upload', 'Confirm', 'Achievements', 'Skills']
 export default function OnboardingPage() {
   const [phase, setPhase] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [authNotice, setAuthNotice] = useState('')
   const [state, setStateRaw] = useState<OnboardingState>(INITIAL_STATE)
 
   const setState = useCallback((updates: Partial<OnboardingState>) => {
     setStateRaw((prev) => ({ ...prev, ...updates }))
   }, [])
 
+  // Detect Supabase auth errors in the URL hash (e.g. expired email link).
+  // The middleware never sees the hash, so we handle it client-side.
+  useEffect(() => {
+    if (window.location.hash.includes('error=')) {
+      const params = new URLSearchParams(window.location.hash.slice(1))
+      const desc = params.get('error_description')
+      setAuthNotice(desc ? desc.replace(/\+/g, ' ') : 'An authentication link error occurred.')
+      history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
+
   async function saveDNA() {
     setSaving(true)
+    setSaveError('')
     try {
       const res = await fetch('/api/save-dna', {
         method: 'POST',
@@ -699,10 +727,11 @@ export default function OnboardingPage() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to save')
+      if (!res.ok) throw new Error('Failed to save Career DNA. Please try again.')
       window.location.href = '/dashboard'
     } catch (err) {
       console.error(err)
+      setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.')
       setSaving(false)
     }
   }
@@ -711,7 +740,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-[#080808]">
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[rgba(8,8,8,0.95)] backdrop-blur border-b border-[#252525] px-10 flex items-center justify-between h-14">
-        <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
+        <Link href="/" className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a] hover:text-[#e8a030] transition-colors">CareerSwarm</Link>
         <div className="flex items-center">
           {STEPS.map((step, i) => (
             <div
@@ -745,6 +774,20 @@ export default function OnboardingPage() {
         </div>
       </nav>
 
+      {authNotice && (
+        <div className="bg-[#1a1100] border-b border-[#d4922a]/40 px-10 py-3 flex items-center justify-between">
+          <span className="font-mono text-[11px] text-[#d4922a]">
+            Auth notice: {authNotice} — you can still sign in below.
+          </span>
+          <button
+            onClick={() => setAuthNotice('')}
+            className="font-mono text-[11px] text-[#a09080] hover:text-[#f0ebe0] ml-6 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="max-w-3xl mx-auto px-10 py-16">
         {phase === 0 && (
           <PhaseUpload state={state} setState={setState} onNext={() => setPhase(1)} />
@@ -758,6 +801,11 @@ export default function OnboardingPage() {
         {phase === 3 && (
           <div>
             <PhaseSkills state={state} setState={setState} onBack={() => setPhase(2)} onNext={saveDNA} />
+            {saveError && (
+              <div className="font-mono text-xs text-[#c0392b] border border-[#c0392b] bg-[rgba(192,57,43,0.08)] px-3 py-2 mt-4">
+                {saveError}
+              </div>
+            )}
             {saving && (
               <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] flex items-center justify-center z-50">
                 <div className="text-center">
