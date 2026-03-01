@@ -28,23 +28,24 @@ export async function POST(req: NextRequest) {
         system: PARSE_RESUME_SYSTEM,
         messages: [{ role: 'user', content: PARSE_RESUME_PROMPT(resumeText) }],
         maxTokens: 2048,
-      }),
+      }).catch((e) => { throw new Error(`profile extraction failed: ${e.message}`) }),
       callClaude({
         model: MODELS.synthesis,
         system: EXTRACT_ACHIEVEMENTS_SYSTEM,
         messages: [{ role: 'user', content: EXTRACT_ACHIEVEMENTS_PROMPT(resumeText) }],
         maxTokens: 4096,
-      }),
+      }).catch((e) => { throw new Error(`achievements extraction failed: ${e.message}`) }),
       callClaude({
         model: MODELS.synthesis,
         system: EXTRACT_SKILLS_SYSTEM,
         messages: [{ role: 'user', content: EXTRACT_SKILLS_PROMPT(resumeText) }],
         maxTokens: 2048,
-      }),
+      }).catch((e) => { throw new Error(`skills extraction failed: ${e.message}`) }),
     ])
 
     const profile = parseJSON<Record<string, unknown>>(profileRaw)
-    const { achievements } = parseJSON<{ achievements: Record<string, unknown>[] }>(achievementsRaw)
+    const achievementsParsed = parseJSON<{ achievements?: Record<string, unknown>[] }>(achievementsRaw)
+    const achievements = achievementsParsed?.achievements ?? []
     const skills = parseJSON<Record<string, unknown>>(skillsRaw)
 
     // Tag each achievement with a tempId for client-side toggling
