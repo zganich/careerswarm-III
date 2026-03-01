@@ -64,7 +64,7 @@ test.describe('Signup page', () => {
   })
 
   test('has name, email, password fields', async ({ page }) => {
-    await expect(page.locator('input[placeholder="James Knight"]')).toBeVisible()
+    await expect(page.locator('input[placeholder="Full Name"]')).toBeVisible()
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
   })
