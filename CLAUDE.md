@@ -25,14 +25,14 @@ CareerSwarm is a Next.js 14 SaaS app that helps job seekers generate ATS-optimiz
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — public anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — service role key (server-side only)
 - `NEXT_PUBLIC_APP_URL` — https://careerswarm.com
-- `STRIPE_SECRET_KEY` — Stripe secret key (sk_live_...)
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key (pk_live_...)
-- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (whsec_...)
-- `STRIPE_PRICE_PRO` — Stripe Price ID for Pro plan (price_...)
+- `STRIPE_SECRET_KEY` — Stripe secret key (currently sk_test_... — swap to live before accepting real payments)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key (currently pk_test_...)
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (whsec_... — set in Vercel)
+- `STRIPE_PRICE_PRO` — `price_1T60OZHlPFPXpDEaHnRNoWaj` — set in Vercel
 - `RESEND_API_KEY` — Resend API key (re_...) for transactional emails
 
 ## Pending Setup (owner must do in dashboards — not code tasks)
-- **Stripe**: Set all `STRIPE_*` env vars in Vercel. Create webhook endpoint at `https://careerswarm.com/api/stripe/webhook` in Stripe Dashboard, listening for: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Enable Customer Portal in Stripe Dashboard → Settings → Billing → Customer Portal.
+- **Stripe (to go live)**: Swap all `STRIPE_*` env vars in Vercel to live keys. Create new live webhook at `https://careerswarm.com/api/stripe/webhook` in Stripe Dashboard (same events). Enable Customer Portal in Stripe Dashboard → Settings → Billing → Customer Portal.
 - **Resend**: Set `RESEND_API_KEY` in Vercel. Verify `careerswarm.com` domain in Resend dashboard. Configure Supabase custom SMTP (Settings → Auth → SMTP) to use Resend's SMTP to bypass the 4 emails/hour limit.
 
 ## Vercel CLI / Deployment
