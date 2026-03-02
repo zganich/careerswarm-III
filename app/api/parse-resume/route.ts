@@ -75,9 +75,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response)
   } catch (err) {
-    console.error('[parse-resume]', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[parse-resume]', msg)
     return NextResponse.json(
-      { error: 'Failed to parse resume. Please try again.' },
+      { error: `Parse failed: ${msg}` },
       { status: 500 }
     )
   }
