@@ -28,7 +28,9 @@ function PhaseUpload({
     fd.append('file', file)
     const res = await fetch('/api/extract-file', { method: 'POST', body: fd })
     const data = await res.json()
-    return data.text || ''
+    if (!res.ok) throw new Error(data.error || 'Extraction failed')
+    if (!data.text) throw new Error('No text found in file')
+    return data.text
   }
 
   async function handleFiles(fileList: FileList) {
@@ -129,7 +131,7 @@ function PhaseUpload({
         <div className="font-mono text-xs tracking-[0.1em] uppercase text-[#a09080] mb-2">
           Drop resume files here
         </div>
-        <div className="text-xs text-[#a09080] opacity-50">PDF · DOCX · TXT — multiple files supported</div>
+        <div className="text-xs text-[#a09080] opacity-50">PDF · DOCX · DOC · TXT · MD — multiple files supported</div>
         <input
           type="file"
           multiple

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Server-side file text extraction — handles PDF and DOCX
-// PDF.js and Mammoth run server-side only (no browser restrictions)
+// Server-side file text extraction — handles PDF, DOCX, TXT, MD, RTF
+// pdf-parse (Node.js native) and Mammoth run server-side only
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,20 +12,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    const ext = file.name.split('.').pop()?.toLowerCase()
+    // Use all extensions in case of double-extension filenames like "resume.docx.pdf"
+    const nameParts = file.name.toLowerCase().split('.')
+    const ext = nameParts.pop() // last extension
+    const secondExt = nameParts.pop() // second-to-last (catches .docx.pdf etc.)
+
     const buffer = Buffer.from(await file.arrayBuffer())
     let text = ''
 
     if (ext === 'pdf') {
-      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs' as string)
-      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise
-      const pages: string[] = []
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i)
-        const content = await page.getTextContent()
-        pages.push(content.items.map((item: { str: string }) => item.str).join(' '))
+      // If file is actually a docx saved with .pdf extension, try docx first
+      if (secondExt === 'docx' || secondExt === 'doc') {
+        try {
+          const mammoth = await import('mammoth')
+          const result = await mammoth.extractRawText({ buffer })
+          text = result.value
+        } catch {
+          // Fall through to PDF parsing
+        }
       }
-      text = pages.join('\n')
+
+      if (!text) {
+        const pdfParse = (await import('pdf-parse')).default
+        const data = await pdfParse(buffer)
+        text = data.text
+      }
     } else if (ext === 'docx' || ext === 'doc') {
       const mammoth = await import('mammoth')
       const result = await mammoth.extractRawText({ buffer })
@@ -33,7 +44,14 @@ export async function POST(req: NextRequest) {
     } else if (ext === 'txt' || ext === 'md' || ext === 'rtf') {
       text = buffer.toString('utf-8')
     } else {
-      return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 })
+      return NextResponse.json({ error: `Unsupported file type: .${ext}` }, { status: 400 })
+    }
+
+    if (!text.trim()) {
+      return NextResponse.json(
+        { error: 'No text could be extracted. The file may be image-based or password-protected.' },
+        { status: 422 }
+      )
     }
 
     return NextResponse.json({ text: text.trim() })
