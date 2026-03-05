@@ -46,12 +46,13 @@
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
 - [x] **Phase 1 — DONE:** Next.js App Router scaffold, Supabase auth, all API routes, dashboard wired to Supabase, prompts for all 7 agent functions
-- [ ] **Phase 2 — NOT STARTED:** Stripe payments integration (installed but not wired)
+- [x] **Phase 2 — DONE:** Stripe checkout, webhooks, portal, upgrade UI all wired
 - [ ] **Phase 3 — NOT STARTED:** Exa/Perplexity job discovery, Vercel cron, Resend email alerts, .docx downloads
 - [ ] **Phase 4 — NOT STARTED:** Mobile dashboard, team/coach accounts, analytics, referral
 
 ### Known Issues / Next Up
-- Stripe keys exist in `.env.local.example` but are not integrated — Phase 2
+- Stripe env vars must be set in Vercel: STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO
+- Stripe webhook endpoint must be registered in Stripe dashboard: https://careerswarm.com/api/stripe/webhook
 - `maxDuration = 90` in `parse-resume` only works on Vercel Pro; currently on Hobby (10s limit)
 
 ---
