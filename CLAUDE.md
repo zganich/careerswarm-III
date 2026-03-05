@@ -51,10 +51,8 @@
 - [ ] **Phase 4 — NOT STARTED:** Mobile dashboard, team/coach accounts, analytics, referral
 
 ### Known Issues / Next Up
-- `atsScore` and `fitScore` in `/api/generate` use `Math.random()` placeholders — need to wire to real `/api/score-opportunity`
 - Stripe keys exist in `.env.local.example` but are not integrated — Phase 2
 - `maxDuration = 90` in `parse-resume` only works on Vercel Pro; currently on Hobby (10s limit)
-- pdf-parse v2 note: `PDFParse` constructor requires a `LoadParameters` object (never call with no args)
 
 ---
 
