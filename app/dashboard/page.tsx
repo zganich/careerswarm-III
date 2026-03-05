@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardClient from './dashboard-client'
@@ -32,12 +33,14 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardClient
-      user={user}
-      userData={userData}
-      dna={dna}
-      achievements={achievements || []}
-      applications={applications || []}
-    />
+    <Suspense>
+      <DashboardClient
+        user={user}
+        userData={userData}
+        dna={dna}
+        achievements={achievements || []}
+        applications={applications || []}
+      />
+    </Suspense>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
@@ -17,6 +18,20 @@ interface Props {
 
 export default function DashboardClient({ user, userData, dna, achievements, applications }: Props) {
   const [tab, setTab] = useState<Tab>('generate')
+  const [upgradingToPro, setUpgradingToPro] = useState(false)
+  const [managingBilling, setManagingBilling] = useState(false)
+  const [showUpgradedBanner, setShowUpgradedBanner] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('upgraded') === '1') {
+      setShowUpgradedBanner(true)
+      // Remove the query param from the URL without reload
+      window.history.replaceState({}, '', '/dashboard')
+      const t = setTimeout(() => setShowUpgradedBanner(false), 6000)
+      return () => clearTimeout(t)
+    }
+  }, [searchParams])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -24,13 +39,44 @@ export default function DashboardClient({ user, userData, dna, achievements, app
     window.location.href = '/auth/login'
   }
 
+  async function handleUpgrade() {
+    setUpgradingToPro(true)
+    try {
+      const res = await fetch('/api/stripe/checkout', { method: 'POST' })
+      const data = await res.json() as { url?: string; error?: string }
+      if (data.url) window.location.href = data.url
+      else alert(data.error ?? 'Could not start checkout')
+    } finally {
+      setUpgradingToPro(false)
+    }
+  }
+
+  async function handleManageBilling() {
+    setManagingBilling(true)
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json() as { url?: string; error?: string }
+      if (data.url) window.location.href = data.url
+      else alert(data.error ?? 'Could not open billing portal')
+    } finally {
+      setManagingBilling(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#080808]">
+      {/* Upgrade success banner */}
+      {showUpgradedBanner && (
+        <div className="fixed top-0 left-0 right-0 z-[200] bg-[#27ae60] text-white text-center font-mono text-xs tracking-[0.1em] py-3 px-6">
+          Welcome to Pro. Unlimited resumes, cover letters, and outreach are now active.
+        </div>
+      )}
+
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[rgba(8,8,8,0.95)] backdrop-blur border-b border-[#252525] px-10 flex items-center justify-between h-14">
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
         <div className="flex items-center gap-6">
-          {/* Credits badge */}
+          {/* Credits / plan badge */}
           {userData.subscription_status === 'free' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#a09080]">
               <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
@@ -39,6 +85,29 @@ export default function DashboardClient({ user, userData, dna, achievements, app
           {userData.subscription_status === 'pro' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">Pro · Unlimited</div>
           )}
+
+          {/* Upgrade CTA (free users) */}
+          {userData.subscription_status === 'free' && (
+            <button
+              onClick={handleUpgrade}
+              disabled={upgradingToPro}
+              className="font-mono text-[10px] tracking-[0.08em] uppercase bg-[#d4922a] text-[#080808] px-4 py-1.5 cursor-pointer border-none disabled:opacity-50"
+            >
+              {upgradingToPro ? 'Redirecting...' : 'Upgrade to Pro'}
+            </button>
+          )}
+
+          {/* Manage billing (pro users) */}
+          {userData.subscription_status === 'pro' && (
+            <button
+              onClick={handleManageBilling}
+              disabled={managingBilling}
+              className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors bg-transparent border-none cursor-pointer p-0 disabled:opacity-50"
+            >
+              {managingBilling ? '...' : 'Billing'}
+            </button>
+          )}
+
           <button
             onClick={handleSignOut}
             className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors bg-transparent border-none cursor-pointer p-0"
@@ -85,7 +154,7 @@ export default function DashboardClient({ user, userData, dna, achievements, app
         </div>
 
         {tab === 'generate' && (
-          <GenerateTab dna={dna} achievements={achievements} userData={userData} />
+          <GenerateTab dna={dna} achievements={achievements} userData={userData} onUpgrade={handleUpgrade} />
         )}
         {tab === 'pipeline' && (
           <PipelineTab applications={applications} />
@@ -104,10 +173,12 @@ function GenerateTab({
   dna,
   achievements,
   userData,
+  onUpgrade,
 }: {
   dna: Record<string, unknown>
   achievements: Record<string, unknown>[]
   userData: Record<string, unknown>
+  onUpgrade: () => void
 }) {
   const [jd, setJd] = useState('')
   const [company, setCompany] = useState('')
@@ -142,9 +213,12 @@ function GenerateTab({
     }
   }
 
+  const outOfCredits =
+    userData.subscription_status === 'free' && (userData.credits_remaining as number) <= 0
+
   async function handleGenerate() {
-    if (userData.subscription_status === 'free' && (userData.credits_remaining as number) <= 0) {
-      setError('No credits remaining. Upgrade to Pro.')
+    if (outOfCredits) {
+      onUpgrade()
       return
     }
     setStep('generating')
@@ -284,20 +358,37 @@ function GenerateTab({
             </div>
           )}
 
-          <div className="flex gap-3">
-            <button
-              onClick={handleGenerate}
-              className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors"
-            >
-              Generate Full Package →
-            </button>
-            <button
-              onClick={reset}
-              className="border border-[#252525] text-[#a09080] font-mono text-xs tracking-[0.1em] uppercase px-6 py-3.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
-            >
-              Score Different Role
-            </button>
-          </div>
+          {outOfCredits ? (
+            <div className="border border-[#d4922a] bg-[rgba(212,146,42,0.06)] p-6">
+              <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-[#d4922a] mb-1">
+                Free Plan Limit Reached
+              </p>
+              <p className="text-sm text-[#a09080] mb-4">
+                You&apos;ve used all 3 free resume packages. Upgrade to Pro for unlimited generations.
+              </p>
+              <button
+                onClick={onUpgrade}
+                className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors"
+              >
+                Upgrade to Pro — $49/mo →
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={handleGenerate}
+                className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors"
+              >
+                Generate Full Package →
+              </button>
+              <button
+                onClick={reset}
+                className="border border-[#252525] text-[#a09080] font-mono text-xs tracking-[0.1em] uppercase px-6 py-3.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+              >
+                Score Different Role
+              </button>
+            </div>
+          )}
         </div>
       )}
 
