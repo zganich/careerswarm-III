@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
       }
 
       if (!text) {
-        const pdfParse = (await import('pdf-parse')).default
+        // pdf-parse is a CJS module; cast needed because its types don't declare .default
+        const pdfParse = (await import('pdf-parse') as unknown as { default: (buf: Buffer) => Promise<{ text: string }> }).default
         const data = await pdfParse(buffer)
         text = data.text
       }

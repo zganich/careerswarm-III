@@ -204,6 +204,7 @@ export interface ParseResumeResponse {
   profile: Partial<CareerDNA>
   achievements: OnboardingState['achievements']
   skills: OnboardingState['skills']
+  differentiators?: string[]
 }
 
 export interface GenerateApplicationResponse {

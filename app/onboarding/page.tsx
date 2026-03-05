@@ -90,6 +90,8 @@ function PhaseUpload({
           email: state.email || (data.profile.email ?? ''),
           linkedin: state.linkedin || (data.profile.linkedin ?? ''),
           location: state.location || (data.profile.location ?? ''),
+          // Store AI-extracted differentiator options so PhaseSkills can render them
+          ...(data.differentiators?.length ? { differentiators: data.differentiators } : {}),
         },
         achievements: data.achievements,
         skills: data.skills,

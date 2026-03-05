@@ -31,3 +31,15 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 .env*.local
+
+# Legacy pre-Next.js stack (old serverless API + static HTML prototype)
+/api/
+/public/
+
+# Scratch / personal files
+*.zip
+vercel.json.local.bak
+
+# OS / editor
+.DS_Store
+.cursor/
