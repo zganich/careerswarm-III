@@ -39,7 +39,9 @@
 - [x] Vercel env vars: `NEXT_PUBLIC_SUPABASE_URL` confirmed pointing at correct project
 - [x] GitHub default branch: fixed from `claude/chat-claude-code-integration-BzsLN` → `main`
 - [x] TypeScript: 0 errors (`tsc --noEmit` passes clean)
-- [x] PDF parsing: fixed for pdf-parse v2.4.5 class-based API (`PDFParse` constructor + `.getText()`)
+- [x] PDF parsing: replaced pdf-parse with `unpdf` v1 (serverless-first PDF.js wrapper — zero-dep, works on Vercel Hobby)
+- [x] Nav: Sign Out now calls `supabase.auth.signOut()` properly (was bare `<a>` link, session never cleared)
+- [x] Nav: Landing page has Sign In link for returning users
 
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
