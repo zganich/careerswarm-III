@@ -3,8 +3,9 @@ import { callClaude, parseJSON, MODELS } from '@/lib/claude'
 import { TAILOR_RESUME_SYSTEM, TAILOR_RESUME_PROMPT } from '@/lib/prompts/tailor-resume'
 import { COVER_LETTER_SYSTEM, COVER_LETTER_PROMPT } from '@/lib/prompts/cover-letter'
 import { OUTREACH_SYSTEM, OUTREACH_PROMPT } from '@/lib/prompts/outreach'
+import { SCORE_OPPORTUNITY_SYSTEM, SCORE_OPPORTUNITY_PROMPT } from '@/lib/prompts/score-opportunity'
 import { createClient } from '@/lib/supabase/server'
-import type { GenerateApplicationResponse } from '@/lib/types'
+import type { GenerateApplicationResponse, OpportunityScore } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,8 +61,8 @@ export async function POST(req: NextRequest) {
     const achievementsSummary = formatAchievements(achievements || [])
     const topAchievement = achievements?.[0]?.formatted || ''
 
-    // Generate resume, cover letter, and outreach in parallel — Sonnet handles all three
-    const [resumeText, coverLetterText, outreachMessage] = await Promise.all([
+    // Generate resume, cover letter, outreach, and score all in parallel
+    const [resumeText, coverLetterText, outreachMessage, scoreRaw] = await Promise.all([
       callClaude({
         model: MODELS.generation,
         system: TAILOR_RESUME_SYSTEM,
@@ -118,11 +119,37 @@ export async function POST(req: NextRequest) {
         ],
         maxTokens: 400,
       }),
+      // Score in parallel — Career DNA vs JD (no extra wall-clock time)
+      callClaude({
+        model: MODELS.generation,
+        system: SCORE_OPPORTUNITY_SYSTEM,
+        messages: [
+          {
+            role: 'user',
+            content: SCORE_OPPORTUNITY_PROMPT({
+              jobDescription,
+              careerDNA: careerDNASummary,
+              achievements: achievementsSummary,
+            }),
+          },
+        ],
+        maxTokens: 1024,
+      }),
     ])
 
-    // Score the generated resume for ATS fit
-    const atsScore = Math.floor(Math.random() * 15) + 82 // Placeholder: wire to real ATS scorer
-    const fitScore = Math.floor(Math.random() * 20) + 75
+    // fitScore: career-DNA-vs-JD fit from the Qualifier Agent
+    const scoreData = parseJSON<OpportunityScore>(scoreRaw)
+    const fitScore = scoreData?.score ?? 70
+    const applyRecommendation = scoreData?.apply_recommendation ?? 'Apply Now'
+
+    // atsScore: keyword overlap between generated resume and the JD
+    const jdWords = jobDescription.toLowerCase().split(/\W+/).filter((w: string) => w.length > 5)
+    const jdKeywords = Array.from(new Set<string>(jdWords))
+    const resumeLower = resumeText.toLowerCase()
+    const matchedKeywords = jdKeywords.filter((w: string) => resumeLower.includes(w)).length
+    const atsScore = jdKeywords.length > 0
+      ? Math.min(98, Math.max(55, Math.round((matchedKeywords / jdKeywords.length) * 100)))
+      : 75
 
     const achievementsUsed = (achievements || [])
       .filter((a) => resumeText.includes(a.company))
@@ -143,7 +170,7 @@ export async function POST(req: NextRequest) {
         fit_score: fitScore,
         ats_score: atsScore,
         keywords_matched: countKeywordMatches(jobDescription, resumeText),
-        apply_recommendation: 'Apply Now',
+        apply_recommendation: applyRecommendation,
         achievements_used: achievementsUsed,
       })
       .select()
