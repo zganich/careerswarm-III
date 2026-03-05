@@ -39,6 +39,7 @@
 - [x] Vercel env vars: `NEXT_PUBLIC_SUPABASE_URL` confirmed pointing at correct project
 - [x] GitHub default branch: fixed from `claude/chat-claude-code-integration-BzsLN` → `main`
 - [x] TypeScript: 0 errors (`tsc --noEmit` passes clean)
+- [x] PDF parsing: fixed for pdf-parse v2.4.5 class-based API (`PDFParse` constructor + `.getText()`)
 
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
@@ -51,6 +52,7 @@
 - `atsScore` and `fitScore` in `/api/generate` use `Math.random()` placeholders — need to wire to real `/api/score-opportunity`
 - Stripe keys exist in `.env.local.example` but are not integrated — Phase 2
 - `maxDuration = 90` in `parse-resume` only works on Vercel Pro; currently on Hobby (10s limit)
+- pdf-parse v2 note: `PDFParse` constructor requires a `LoadParameters` object (never call with no args)
 
 ---
 
