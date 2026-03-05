@@ -15,6 +15,7 @@ function PhaseUpload({
   onNext: () => void
 }) {
   const [loading, setLoading] = useState(false)
+  const [extracting, setExtracting] = useState(false)
   const [error, setError] = useState('')
   const [files, setFiles] = useState<{ name: string; status: 'processing' | 'done' | 'error' }[]>([])
 
@@ -35,6 +36,7 @@ function PhaseUpload({
 
   async function handleFiles(fileList: FileList) {
     setError('')
+    setExtracting(true)
     const newFiles = Array.from(fileList)
     setFiles(newFiles.map((f) => ({ name: f.name, status: 'processing' as const })))
 
@@ -59,6 +61,7 @@ function PhaseUpload({
         ? state.resumeText + '\n\n---\n\n' + combined
         : combined,
     })
+    setExtracting(false)
   }
 
   async function handleParse() {
@@ -213,13 +216,18 @@ function PhaseUpload({
       <div className="flex justify-end pt-6 border-t border-[#252525] mt-10">
         <button
           onClick={handleParse}
-          disabled={loading}
+          disabled={loading || extracting}
           className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors disabled:opacity-40 flex items-center gap-2"
         >
           {loading ? (
             <>
               <span className="w-3 h-3 border border-[#080808]/30 border-t-[#080808] rounded-full spinner" />
               Building Career DNA...
+            </>
+          ) : extracting ? (
+            <>
+              <span className="w-3 h-3 border border-[#080808]/30 border-t-[#080808] rounded-full spinner" />
+              Extracting files...
             </>
           ) : (
             'Parse My Resume →'
@@ -509,11 +517,15 @@ function PhaseSkills({
   setState,
   onBack,
   onNext,
+  saving,
+  saveError,
 }: {
   state: OnboardingState
   setState: (s: Partial<OnboardingState>) => void
   onBack: () => void
   onNext: () => void
+  saving?: boolean
+  saveError?: string
 }) {
   const skillSections = [
     { key: 'crm', label: 'CRM & Sales Tools' },
@@ -613,12 +625,29 @@ function PhaseSkills({
         </div>
       )}
 
+      {saveError && (
+        <div className="font-mono text-xs text-[#c0392b] border border-[#c0392b] bg-[rgba(192,57,43,0.08)] px-3 py-2 mb-4">
+          {saveError}
+        </div>
+      )}
+
       <div className="flex justify-between items-center pt-6 border-t border-[#252525]">
-        <button onClick={onBack} className="font-mono text-xs tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors">
+        <button onClick={onBack} disabled={saving} className="font-mono text-xs tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors disabled:opacity-40">
           ← Back
         </button>
-        <button onClick={onNext} className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors">
-          Save Career DNA →
+        <button
+          onClick={onNext}
+          disabled={saving}
+          className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#e8a030] transition-colors disabled:opacity-40 flex items-center gap-2"
+        >
+          {saving ? (
+            <>
+              <span className="w-3 h-3 border border-[#080808]/30 border-t-[#080808] rounded-full spinner" />
+              Saving...
+            </>
+          ) : (
+            'Save Career DNA →'
+          )}
         </button>
       </div>
     </div>
@@ -653,6 +682,7 @@ const STEPS = ['Upload', 'Confirm', 'Achievements', 'Skills']
 export default function OnboardingPage() {
   const [phase, setPhase] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [state, setStateRaw] = useState<OnboardingState>(INITIAL_STATE)
 
   const setState = useCallback((updates: Partial<OnboardingState>) => {
@@ -684,6 +714,7 @@ export default function OnboardingPage() {
       window.location.href = '/dashboard'
     } catch (err) {
       console.error(err)
+      setSaveError(err instanceof Error ? err.message : 'Failed to save Career DNA. Please try again.')
       setSaving(false)
     }
   }
@@ -729,7 +760,7 @@ export default function OnboardingPage() {
         )}
         {phase === 3 && (
           <div>
-            <PhaseSkills state={state} setState={setState} onBack={() => setPhase(2)} onNext={saveDNA} />
+            <PhaseSkills state={state} setState={setState} onBack={() => setPhase(2)} onNext={saveDNA} saving={saving} saveError={saveError} />
             {saving && (
               <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] flex items-center justify-center z-50">
                 <div className="text-center">
