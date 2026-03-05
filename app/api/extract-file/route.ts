@@ -33,10 +33,13 @@ export async function POST(req: NextRequest) {
       }
 
       if (!text) {
-        // pdf-parse is a CJS module; cast needed because its types don't declare .default
-        const pdfParse = (await import('pdf-parse') as unknown as { default: (buf: Buffer) => Promise<{ text: string }> }).default
-        const data = await pdfParse(buffer)
-        text = data.text
+        // pdf-parse v2 uses a class-based API: new PDFParse({ data }) then .getText()
+        const { PDFParse } = await import('pdf-parse') as unknown as {
+          PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ text: string }> }
+        }
+        const parser = new PDFParse({ data: buffer })
+        const result = await parser.getText()
+        text = result.text
       }
     } else if (ext === 'docx' || ext === 'doc') {
       const mammoth = await import('mammoth')
