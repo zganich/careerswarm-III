@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
 
 type Tab = 'generate' | 'pipeline' | 'dna'
 
@@ -16,6 +17,12 @@ interface Props {
 
 export default function DashboardClient({ user, userData, dna, achievements, applications }: Props) {
   const [tab, setTab] = useState<Tab>('generate')
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/auth/login'
+  }
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -32,9 +39,12 @@ export default function DashboardClient({ user, userData, dna, achievements, app
           {userData.subscription_status === 'pro' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">Pro · Unlimited</div>
           )}
-          <a href="/auth/login" className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors">
+          <button
+            onClick={handleSignOut}
+            className="font-mono text-[10px] tracking-[0.08em] uppercase text-[#a09080] hover:text-[#f0ebe0] transition-colors bg-transparent border-none cursor-pointer p-0"
+          >
             Sign Out
-          </a>
+          </button>
         </div>
       </nav>
 
