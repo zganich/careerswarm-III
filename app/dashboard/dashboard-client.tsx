@@ -77,17 +77,20 @@ export default function DashboardClient({ user, userData, dna, achievements, app
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[#d4922a]">CareerSwarm</div>
         <div className="flex items-center gap-6">
           {/* Credits / plan badge */}
-          {userData.subscription_status === 'free' && (
+          {userData.is_beta && (
+            <div className="font-mono text-[10px] tracking-[0.08em] text-[#7c6fcd]">Beta · Unlimited</div>
+          )}
+          {!userData.is_beta && userData.subscription_status === 'free' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#a09080]">
               <span className="text-[#f0ebe0]">{userData.credits_remaining as number}</span> resumes remaining
             </div>
           )}
-          {userData.subscription_status === 'pro' && (
+          {!userData.is_beta && userData.subscription_status === 'pro' && (
             <div className="font-mono text-[10px] tracking-[0.08em] text-[#27ae60]">Pro · Unlimited</div>
           )}
 
-          {/* Upgrade CTA (free users) */}
-          {userData.subscription_status === 'free' && (
+          {/* Upgrade CTA (free non-beta users) */}
+          {!userData.is_beta && userData.subscription_status === 'free' && (
             <button
               onClick={handleUpgrade}
               disabled={upgradingToPro}
@@ -98,7 +101,7 @@ export default function DashboardClient({ user, userData, dna, achievements, app
           )}
 
           {/* Manage billing (pro users) */}
-          {userData.subscription_status === 'pro' && (
+          {!userData.is_beta && userData.subscription_status === 'pro' && (
             <button
               onClick={handleManageBilling}
               disabled={managingBilling}
@@ -213,8 +216,8 @@ function GenerateTab({
     }
   }
 
-  const outOfCredits =
-    userData.subscription_status === 'free' && (userData.credits_remaining as number) <= 0
+  const hasUnlimitedAccess = userData.is_beta || userData.subscription_status !== 'free'
+  const outOfCredits = !hasUnlimitedAccess && (userData.credits_remaining as number) <= 0
 
   async function handleGenerate() {
     if (outOfCredits) {
