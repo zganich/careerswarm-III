@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
+import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus, User as AppUser } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 
 type Tab = 'generate' | 'pipeline' | 'dna'
 
 interface Props {
   user: User
-  userData: Record<string, unknown>
+  userData: AppUser
   dna: Record<string, unknown>
   achievements: Record<string, unknown>[]
   applications: Record<string, unknown>[]
@@ -180,7 +180,7 @@ function GenerateTab({
 }: {
   dna: Record<string, unknown>
   achievements: Record<string, unknown>[]
-  userData: Record<string, unknown>
+  userData: AppUser
   onUpgrade: () => void
 }) {
   const [jd, setJd] = useState('')
