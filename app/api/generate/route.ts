@@ -30,11 +30,13 @@ export async function POST(req: NextRequest) {
     // Check credits for free users
     const { data: userData } = await supabase
       .from('users')
-      .select('subscription_status, credits_remaining')
+      .select('subscription_status, credits_remaining, is_beta')
       .eq('id', user.id)
       .single()
 
-    if (userData?.subscription_status === 'free' && (userData?.credits_remaining ?? 0) <= 0) {
+    const hasUnlimitedAccess = userData?.is_beta || userData?.subscription_status !== 'free'
+
+    if (!hasUnlimitedAccess && (userData?.credits_remaining ?? 0) <= 0) {
       return NextResponse.json(
         { error: 'No credits remaining. Upgrade to Pro for unlimited generations.' },
         { status: 402 }
@@ -176,8 +178,8 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    // Decrement credits for free users
-    if (userData?.subscription_status === 'free') {
+    // Decrement credits for free non-beta users
+    if (!hasUnlimitedAccess) {
       await supabase
         .from('users')
         .update({ credits_remaining: (userData.credits_remaining ?? 1) - 1 })

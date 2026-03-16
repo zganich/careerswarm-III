@@ -12,6 +12,7 @@ export interface User {
   organization_id: string | null
   subscription_status: SubscriptionStatus
   credits_remaining: number
+  is_beta: boolean
   created_at: string
 }
 
