@@ -6,8 +6,6 @@ import { EXTRACT_SKILLS_SYSTEM, EXTRACT_SKILLS_PROMPT } from '@/lib/prompts/extr
 import { createClient } from '@/lib/supabase/server'
 import type { ParseResumeResponse } from '@/lib/types'
 
-export const maxDuration = 90
-
 export async function POST(req: NextRequest) {
   try {
     const { resumeText } = await req.json()
@@ -22,29 +20,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Run all three extractions in parallel using Sonnet (fast enough for Vercel's
-    // 10s function limit on Hobby plan). Switch to MODELS.synthesis (Opus) if
-    // the project is upgraded to Vercel Pro where maxDuration=90 takes effect.
-    const [profileRaw, achievementsRaw, skillsRaw] = await Promise.all([
-      callClaude({
-        model: MODELS.generation,
-        system: PARSE_RESUME_SYSTEM,
-        messages: [{ role: 'user', content: PARSE_RESUME_PROMPT(resumeText) }],
-        maxTokens: 2048,
-      }).catch((e) => { throw new Error(`profile extraction failed: ${e.message}`) }),
-      callClaude({
-        model: MODELS.generation,
-        system: EXTRACT_ACHIEVEMENTS_SYSTEM,
-        messages: [{ role: 'user', content: EXTRACT_ACHIEVEMENTS_PROMPT(resumeText) }],
-        maxTokens: 4096,
-      }).catch((e) => { throw new Error(`achievements extraction failed: ${e.message}`) }),
-      callClaude({
-        model: MODELS.generation,
-        system: EXTRACT_SKILLS_SYSTEM,
-        messages: [{ role: 'user', content: EXTRACT_SKILLS_PROMPT(resumeText) }],
-        maxTokens: 2048,
-      }).catch((e) => { throw new Error(`skills extraction failed: ${e.message}`) }),
-    ])
+    // Run extractions sequentially to stay within Vercel Hobby's 10s limit.
+    // Input is capped at 8000 chars per call to keep latency predictable.
+    const text = resumeText.slice(0, 8000)
+
+    const profileRaw = await callClaude({
+      model: MODELS.generation,
+      system: PARSE_RESUME_SYSTEM,
+      messages: [{ role: 'user', content: PARSE_RESUME_PROMPT(text) }],
+      maxTokens: 2048,
+    }).catch((e) => { throw new Error(`profile extraction failed: ${e.message}`) })
+
+    const achievementsRaw = await callClaude({
+      model: MODELS.generation,
+      system: EXTRACT_ACHIEVEMENTS_SYSTEM,
+      messages: [{ role: 'user', content: EXTRACT_ACHIEVEMENTS_PROMPT(text) }],
+      maxTokens: 4096,
+    }).catch((e) => { throw new Error(`achievements extraction failed: ${e.message}`) })
+
+    const skillsRaw = await callClaude({
+      model: MODELS.generation,
+      system: EXTRACT_SKILLS_SYSTEM,
+      messages: [{ role: 'user', content: EXTRACT_SKILLS_PROMPT(text) }],
+      maxTokens: 2048,
+    }).catch((e) => { throw new Error(`skills extraction failed: ${e.message}`) })
 
     const profile = parseJSON<Record<string, unknown>>(profileRaw)
     const achievementsParsed = parseJSON<{ achievements?: Record<string, unknown>[] }>(achievementsRaw)

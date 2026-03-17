@@ -29,7 +29,7 @@ Return this exact JSON structure:
   "current_title": "most recent job title",
   "years_experience": "X+ years",
   "industries": ["specific industries — be precise"],
-  "target_titles": ["Head of Partnerships", "VP of Partnerships", "VP Business Development"],
+  "target_titles": ["infer 2-4 realistic next titles based on their actual career trajectory"],
   "summary": "2-sentence professional summary using their actual career facts. First person. No clichés.",
   "superpower": "One sentence. Their single most differentiated quality based on actual proof points.",
   "companies": [

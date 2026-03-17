@@ -187,10 +187,10 @@ function PhaseUpload({
       {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4 mb-5">
         {[
-          { label: 'Full Name', key: 'name', placeholder: 'James Knight' },
-          { label: 'Email', key: 'email', placeholder: 'you@email.com' },
-          { label: 'LinkedIn', key: 'linkedin', placeholder: 'linkedin.com/in/yourname' },
-          { label: 'Location', key: 'location', placeholder: 'Salt Lake City, UT' },
+          { label: 'Full Name', key: 'name', placeholder: 'Your full name' },
+          { label: 'Email', key: 'email', placeholder: 'your@email.com' },
+          { label: 'LinkedIn', key: 'linkedin', placeholder: 'linkedin.com/in/yourprofile' },
+          { label: 'Location', key: 'location', placeholder: 'City, State' },
         ].map((field) => (
           <div key={field.key}>
             <label className="block font-mono text-[10px] tracking-[0.15em] uppercase text-[#a09080] mb-1.5">
@@ -531,15 +531,15 @@ function PhaseSkills({
     { key: 'crm', label: 'CRM & Sales Tools' },
     { key: 'ai', label: 'AI & Technical Tools' },
     { key: 'domain', label: 'Domain Expertise' },
-    { key: 'partnerTypes', label: 'Partnership Types' },
+    { key: 'partnerTypes', label: 'Industry & Specialty' },
     { key: 'tools', label: 'Analytics & Operations' },
     { key: 'certifications', label: 'Certifications & Awards' },
   ] as const
 
   const diffs = ((state.profile as Record<string, unknown>)?.skills as string[] | undefined) || [
     state.skills?.domain?.[0]
-      ? `${state.skills.domain[0]} specialist with ${state.profile?.years_experience} building high-performance partner ecosystems.`
-      : 'Executive with a track record of building partner revenue from zero to scale.',
+      ? `${state.skills.domain[0]} specialist with ${state.profile?.years_experience} of experience.`
+      : 'Executive with a track record of delivering results at scale.',
   ]
 
   function toggleSkill(section: keyof OnboardingState['skills'], skill: string) {
