@@ -15,12 +15,16 @@ James works across three Claude environments. Each has a distinct role:
 **Does NOT have:** MCP connections, Cowork skills, document generation.
 **How to start:** `cd` into the repo root, run `claude`. CLAUDE.md is auto-loaded.
 
-### Cowork (Claude desktop app)
-**Use for:** Documents (docx, pptx, xlsx, PDF), strategy, research, MCP tasks, grant proposals, decks, sprint planning, and anything that produces a file deliverable.
-**Has:** Workspace folder at `/sessions/loving-cool-wright/mnt/careerswarm III/`, MCP connections (Vercel, Gmail, Google Calendar, Notion), skills (docx, pptx, pdf, xlsx, humanize, and others).
-**Key skills to invoke:** `humanize` — always run on cover letters, outreach copy, and proposal prose before finalizing. `docx` / `pptx` / `pdf` for any document output.
-**Does NOT have:** Direct git access or the ability to deploy code.
-**How to start:** Open Claude desktop app, select Cowork, open a new session. CLAUDE.md is loaded via the workspace folder.
+### Cowork (Claude desktop app) — PRIMARY ENVIRONMENT
+**Use for:** Everything. Code edits, database ops, browser testing, documents, grants, strategy, MCP tasks, git push. This is the single control center.
+**Has:** Workspace folder, MCP connections (Vercel, Gmail, Google Calendar, Notion), skills (docx, pptx, pdf, xlsx), Supabase API access, GitHub push via token, Claude in Chrome for browser testing.
+**CLI credentials available in this session:**
+- Supabase personal access token: stored, use Management API at `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/database/query`
+- Supabase service role key: available via API key endpoint (fetch fresh each session)
+- GitHub token: set in git remote URL — `git push origin main` works directly from Cowork
+**Key skills to invoke:** `docx` / `pptx` / `pdf` for document output.
+**Does NOT have:** `npm install`, `tsc --noEmit` (TypeScript compile check) — for these only, use Claude Code.
+**How to start:** Open Claude desktop app, select Cowork. CLAUDE.md is loaded via workspace folder.
 
 ### Claude Chat (claude.ai — web or mobile)
 **Use for:** Quick strategic questions, brainstorming, reviewing a pasted document, thinking through decisions, or any session where you don't have desktop access.
@@ -71,7 +75,8 @@ When switching from one environment to another mid-task:
 ## Owner / Candidate Profile
 
 - **Name:** James Knight
-- **Email:** jknight3@gmail.com
+- **Email:** james@careerswarm.com (primary for CareerSwarm business)
+- **Personal email:** jknight3@gmail.com (Gmail MCP connected to this account)
 - **Target roles:** Head of Partnerships, VP Partnerships, Director Strategic Alliances
 - **Location:** Cottonwood Heights, UT (SLC metro) — Remote or SLC only
 - **Comp floor:** $200K+ OTE
@@ -80,17 +85,32 @@ When switching from one environment to another mid-task:
 
 ## Current State (update after every task)
 
-### Infrastructure — ALL GREEN as of Mar 5, 2026
-- [x] Git: `main` is default branch on GitHub, local and origin in sync, working tree clean
-- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (56s)
+### Infrastructure — Last updated Mar 21, 2026 (end of session 2)
+- [x] Git: `main` is default branch, GitHub token wired into remote — Cowork can push directly
+- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (commit 42115a4)
 - [x] Supabase tables: `users`, `career_dna`, `achievements`, `generated_applications` — all exist
-- [x] Supabase auth: site_url = `https://careerswarm.com`, redirect URLs set for all envs, `mailer_autoconfirm = true`
+- [x] Supabase `is_beta` column: LIVE — applied via Management API on Mar 20
+- [x] James user row: EXISTS — `is_beta = true`, `onboarding_complete = false`
+- [x] Supabase auth: site_url = `https://careerswarm.com`, redirect URLs set, `mailer_autoconfirm = true`
 - [x] Vercel env vars: `NEXT_PUBLIC_SUPABASE_URL` confirmed pointing at correct project
-- [x] GitHub default branch: fixed from `claude/chat-claude-code-integration-BzsLN` → `main`
-- [x] TypeScript: 0 errors (`tsc --noEmit` passes clean)
-- [x] PDF parsing: replaced pdf-parse with `unpdf` v1 (serverless-first PDF.js wrapper — zero-dep, works on Vercel Hobby)
-- [x] Nav: Sign Out now calls `supabase.auth.signOut()` properly (was bare `<a>` link, session never cleared)
-- [x] Nav: Landing page has Sign In link for returning users
+- [x] TypeScript: 0 errors (last confirmed Mar 16)
+- [x] PDF parsing: `unpdf` v1 — live
+- [x] Onboarding placeholders: FIXED and deployed (PR #4 merged, commit e19f2d3)
+- [x] Parse-resume timeout fix: sequential calls, 8000 char cap — DEPLOYED
+- [x] Test user created: `tester@careerswarm.com` / `TestUser2026!` — confirmed in auth + users table
+- [x] Stale PR #1 closed on GitHub
+- [x] IBM proposal polished: `CareerSwarm-IBM-Impact-Proposal-POLISHED.docx` saved to workspace — READY TO SUBMIT (uses james@careerswarm.com)
+- [x] Anthropic credits application drafted: `CareerSwarm-Anthropic-Credits-Application.docx` saved to workspace — includes all field answers + submission guide (uses james@careerswarm.com)
+- [x] Primary email updated to james@careerswarm.com across all project files, docs, and scheduled tasks
+- [x] Claude Projects setup: CLAUDE-PROJECT-BRIEF.md + CLAUDE-PROJECTS-SETUP.md created in workspace
+- [x] Power user playbook: POWER-USER-PLAYBOOK.md created in workspace
+- [x] Scheduled tasks live: `careerswarm-morning-briefing` (weekdays 8am) + `ibm-deadline-alert` (Mar 24 8am)
+- [x] Stale IBM proposal drafts deleted (FINAL.docx + original .docx removed — POLISHED.docx is the only version)
+- [ ] James must complete onboarding at careerswarm.com to set `onboarding_complete = true` and create `career_dna` row — required to access dashboard
+- [ ] James must finish Claude Projects setup: open app, click "Create your first project", select careerswarm III folder, add CLAUDE-PROJECT-BRIEF.md as knowledge file
+- [ ] Run morning briefing task once manually (Scheduled sidebar) to pre-approve Gmail + Vercel tool access
+- [ ] Git index.lock present in local repo (from Claude Code session) — next Claude Code session run `rm .git/index.lock` then `git pull origin main` to sync
+- [ ] Stripe env vars still not set in Vercel (see Known Issues)
 
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
@@ -99,17 +119,19 @@ When switching from one environment to another mid-task:
 - [ ] **Phase 3 — NOT STARTED:** Exa/Perplexity job discovery, Vercel cron, Resend email alerts, .docx downloads
 - [ ] **Phase 4 — NOT STARTED:** Mobile dashboard, team/coach accounts, analytics, referral
 
-### Known Issues / Next Up
-- Stripe env vars must be set in Vercel: STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO
-- Stripe webhook endpoint must be registered in Stripe dashboard: https://careerswarm.com/api/stripe/webhook
-- `maxDuration = 90` in `parse-resume` only works on Vercel Pro; currently on Hobby (10s limit)
-- Schema gaps (identified Mar 2026, not yet migrated): `career_dna` missing `role_family`, `career_narrative`, `consolidation_status`; `achievements` missing `source_resume_id`; tables `roasts` and `guest_sessions` not yet created — required for Resume Roast and guest session features
-- Persona hardcoding: 7 locations in codebase still use hardcoded partnerships/BD persona — do not add more. Fix is Sprint 0 (`lib/role-taxonomy.ts`)
-- Immediate funding actions: IBM Impact Accelerator (submit before March 25 2026 — proposal drafted, needs fact-check and humanize pass before submission), Microsoft for Startups (microsoft.com/startups, free $6K, ~5 min), Anthropic startup credits (claude.ai/programs/startups)
-- IBM proposal CRITICAL flag: proposal claims "paying subscribers" and "paying customers" but Stripe is not live. Must correct before submission or it is a material misrepresentation.
-- Notion Mission Control built March 16 2026 — 10 domain pages covering all business areas. URL: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
-- GITHUB-REFERENCE.md added to workspace root — non-technical git guide for James. Needs commit/push via Claude Code.
-- OpenClaw integration planned (Phase 3): personal AI agent platform connecting CareerSwarm to WhatsApp/Slack/Telegram via SOUL.md config. Architecture documented in Notion.
+### Known Issues / Next Up (priority order)
+1. Submit IBM Impact Accelerator before March 25 2026 — POLISHED .docx ready in workspace; submit at ibmimpact.versaic.com/login
+2. Submit Anthropic startup credits — .docx with all answers ready in workspace; submit at claude.ai/programs/startups
+3. Complete onboarding at careerswarm.com — required to unlock dashboard (James must do this in browser)
+4. Set Stripe env vars in Vercel: STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO
+5. Register Stripe webhook at https://careerswarm.com/api/stripe/webhook
+6. Run full browser test of onboarding + dashboard + generate flow — blocked until James completes onboarding
+7. Get beta tester's email and run `UPDATE users SET is_beta = true WHERE email = 'tester@email.com'` via Supabase API (Cowork can do this)
+8. Claude Code: run `rm .git/index.lock && git pull origin main` to clear stale lock and sync local repo
+- Schema gaps (not yet migrated): `career_dna` missing `role_family`, `career_narrative`, `consolidation_status`; `achievements` missing `source_resume_id`; tables `roasts` and `guest_sessions` not yet created
+- Persona hardcoding: 7 locations still hardcoded — fix is Sprint 0 (`lib/role-taxonomy.ts`), do not add more
+- Notion Mission Control built March 16 2026: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
+- OpenClaw integration planned (Phase 3): personal AI agent platform, architecture documented in Notion
 
 ---
 
@@ -249,9 +271,24 @@ Preferences, repeated corrections, and patterns James has established. Every Cla
 - James is both the founder and the target user — a partnerships/BD executive who lived the job search problem firsthand. This is not a pivot or a business school exercise. The founder story belongs in all external-facing materials.
 - Never let grant or investor materials claim "paying subscribers" or "paying customers" until Stripe is confirmed live. This is a material misrepresentation risk.
 
-**Workflow (updated March 16 2026)**
+**Workflow (updated March 21 2026)**
+- Primary email for CareerSwarm business is james@careerswarm.com — use this in all documents, proposals, and external-facing materials. jknight3@gmail.com is the Gmail MCP connected account — use it for inbox searches but not as the business contact email.
+- Claude Projects system is now set up: CLAUDE-PROJECT-BRIEF.md is the condensed knowledge file for Claude Projects, CLAUDE.md is the full living document. Both live in the workspace. Project brief should be added to the CareerSwarm III Claude Project as a knowledge file.
+- Scheduled tasks are live: morning briefing fires weekdays at 8am, IBM deadline alert fires March 24 at 8am. Check the Scheduled sidebar to manage them. Run morning briefing once manually to pre-approve tool access.
+- Power user infrastructure is documented in POWER-USER-PLAYBOOK.md — 7 layers covering context, automation, MCPs, conversation patterns, parallel agents, memory management, and skills.
+- Stale draft docs should be deleted once a POLISHED version exists. Only keep the submission-ready version of each document.
+- One topic per conversation is the discipline that keeps Claude performing well. Start new conversations frequently; the project knowledge file means context never gets lost.
+
+**Workflow (updated March 20 2026)**
 - James wants Claude to decide top priorities, not present options. Be direct. Lead with the most important thing.
 - James is not technical. Explain git/code concepts in plain English. GITHUB-REFERENCE.md in workspace root is the reference guide.
-- Cowork updates to CLAUDE.md must be committed and pushed via Claude Code to sync with GitHub. Remind James of this at end of session.
-- Notion Mission Control (https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa) is the business operating system. Update it when domain status changes.
-- End-of-session command: James says "end of session" or "update CLAUDE.md" -- update Current State, add any new learnings, then remind him to open Claude Code and push the CLAUDE.md change.
+- Cowork is now the PRIMARY environment. It can push to git, run Supabase queries, and do browser testing. Claude Code is only needed for `npm install` and `tsc --noEmit`.
+- GitHub token is wired into git remote — Cowork can run `git push origin main` directly. No more PR dance.
+- Supabase Management API works from Cowork bash: POST to `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/database/query` with the personal access token.
+- Supabase service role key can be fetched fresh via `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/api-keys` — use for auth admin operations (creating users, etc).
+- Test user exists: `tester@careerswarm.com` / `TestUser2026!` — use for browser/API testing without touching James's account.
+- Claude in Chrome browser automation can READ pages on careerswarm.com reliably but CANNOT execute JavaScript or click on pages when the Claude extension is active on the same origin. This is a known Chrome extension permission conflict. Workaround: use API-level testing via curl/bash for backend routes; use browser reads for UI audits.
+- All CareerSwarm API routes use Supabase SSR cookie-based auth — they cannot be tested via curl with Bearer tokens. A real browser session is required to test the full UI flow.
+- End-of-session: James says "end of session" -- update Current State + Learnings, then Cowork pushes CLAUDE.md directly via `git push origin main`.
+- Git index.lock conflict: if `.git/index.lock` exists (from a Claude Code session), Cowork cannot stash or merge. Workaround: ask Claude Code to run `rm .git/index.lock && git pull origin main` at start of next session.
+- Notion Mission Control: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
