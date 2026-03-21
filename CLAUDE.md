@@ -91,6 +91,8 @@ When switching from one environment to another mid-task:
 - [x] Resume Roast page: LIVE at careerswarm.com/roast — lib/prompts/roast.ts, app/api/roast/route.ts, app/roast/page.tsx (commit 503faf8)
 - [x] MODELS.fast added to lib/claude.ts: 'claude-haiku-4-5-20251001' — for roast and cheap fast routes
 - [x] Vercel CLI auth: personal access token wired, can set env vars via CLI from Cowork
+- [x] parse-resume route: switched all 3 calls to MODELS.fast (Haiku) — Sonnet x3 sequential exceeded 10s Hobby limit (commit ebb10b3)
+- [ ] ANTHROPIC API CREDITS DEPLETED — all Claude API calls fail with "credit balance too low". Top up at console.anthropic.com before any further testing. This blocks onboarding, roast, and generate.
 
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
@@ -100,10 +102,11 @@ When switching from one environment to another mid-task:
 - [ ] **Phase 4 — NOT STARTED:** Mobile dashboard, team/coach accounts, analytics, referral
 
 ### Known Issues / Next Up (priority order)
-1. Submit IBM Impact Accelerator before March 25 2026 — POLISHED .docx ready in workspace; submit at ibmimpact.versaic.com/login
-2. Submit Anthropic startup credits — .docx with all answers ready in workspace; submit at claude.ai/programs/startups
-3. Complete onboarding at careerswarm.com — required to unlock dashboard (James must do this in browser)
-4. Run full browser test of onboarding + dashboard + generate flow — blocked until James completes onboarding
+1. **TOP UP ANTHROPIC CREDITS** at console.anthropic.com — blocks ALL Claude API calls (onboarding, roast, generate)
+2. Submit IBM Impact Accelerator before March 25 2026 — POLISHED .docx ready in workspace; submit at ibmimpact.versaic.com/login
+3. Submit Anthropic startup credits — .docx with all answers ready in workspace; submit at claude.ai/programs/startups
+4. Complete onboarding at careerswarm.com — required to unlock dashboard (James must do this in browser); re-run browser test once credits are added
+5. Run full browser test of onboarding + dashboard + generate flow — blocked until credits topped up
 5. Get beta tester's email and run `UPDATE users SET is_beta = true WHERE email = 'tester@email.com'` via Supabase API (Cowork can do this)
 6. VS Code Source Control panel is causing repeated git lock files — close it when doing Claude Code/Cowork sessions
 7. Stripe is now live in production — test a real checkout flow end to end once James completes onboarding
@@ -260,7 +263,11 @@ Preferences, repeated corrections, and patterns James has established. Every Cla
 - Git lock files: VS Code Source Control panel running in the background creates repeated `.git/index.lock` and `.git/HEAD.lock` files that block commits from Cowork. Close VS Code or disable its git integration when doing sessions. Workaround: push via GitHub API using the token in the git remote URL, or have Claude Code clear the lock.
 - Vercel CLI auth: `npx vercel --token <token>` works from Cowork for env var management. Token stored as Vercel personal access token (not OIDC — that's short-lived). The token used in session 4 is in the session history if needed.
 - Stripe API is accessible directly via curl from Cowork bash using the secret key. Can list products, prices, webhooks, and create/delete endpoints without needing the dashboard.
-- parse-resume regression watch: the `export const maxDuration = 90` + parallel `Promise.all` pattern keeps getting reintroduced. The correct pattern is sequential calls with 8000-char cap. If onboarding parse fails, check route.ts first for this regression.
+- parse-resume regression watch: the `export const maxDuration = 90` + parallel `Promise.all` pattern keeps getting reintroduced. The correct pattern is sequential calls with 8000-char cap using MODELS.fast (Haiku). If onboarding parse fails, check route.ts first for this regression.
+- Anthropic API credits: the `ANTHROPIC_API_KEY` in Vercel is tied to an account — if that account runs out of credits, every Claude call returns a 500 with "credit balance too low". Check console.anthropic.com if parse/roast/generate all fail simultaneously.
+- Vercel log truncation: the Vercel MCP tool only shows the first log line per request in the table view. The `[DEP0169]` Node deprecation warning appears as the first line and masks our actual console.error output. To see full logs, use the Vercel REST API or check the Vercel dashboard directly.
+- Git lock from GitHub API push: when the git HEAD.lock cannot be removed (VS Code background process), use the GitHub REST API to push files directly: GET the file SHA, then PUT with base64-encoded content. Token is in `git remote get-url origin`.
+- Vercel PAT for env var inspection: stored in session — use `curl https://api.vercel.com/v9/projects/{id}/env?teamId={teamId}` with the Vercel PAT to list all env vars and verify keys are set. Do not commit the token itself.
 
 **Accuracy**
 - Verify facts before stating them. Do not repeat notes from CLAUDE.md as truth without confirming first. If something is stated as a fact, it should be confirmed, not assumed from a prior note.
