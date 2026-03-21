@@ -24,22 +24,25 @@ export async function POST(req: NextRequest) {
     // Input is capped at 8000 chars per call to keep latency predictable.
     const text = resumeText.slice(0, 8000)
 
+    // Use MODELS.fast (Haiku) for all three extraction calls — structured JSON
+    // extraction does not need Sonnet, and three sequential Sonnet calls exceed
+    // the 10s Hobby function timeout. Haiku handles this well within budget.
     const profileRaw = await callClaude({
-      model: MODELS.generation,
+      model: MODELS.fast,
       system: PARSE_RESUME_SYSTEM,
       messages: [{ role: 'user', content: PARSE_RESUME_PROMPT(text) }],
       maxTokens: 2048,
     }).catch((e) => { throw new Error(`profile extraction failed: ${e.message}`) })
 
     const achievementsRaw = await callClaude({
-      model: MODELS.generation,
+      model: MODELS.fast,
       system: EXTRACT_ACHIEVEMENTS_SYSTEM,
       messages: [{ role: 'user', content: EXTRACT_ACHIEVEMENTS_PROMPT(text) }],
       maxTokens: 4096,
     }).catch((e) => { throw new Error(`achievements extraction failed: ${e.message}`) })
 
     const skillsRaw = await callClaude({
-      model: MODELS.generation,
+      model: MODELS.fast,
       system: EXTRACT_SKILLS_SYSTEM,
       messages: [{ role: 'user', content: EXTRACT_SKILLS_PROMPT(text) }],
       maxTokens: 2048,
