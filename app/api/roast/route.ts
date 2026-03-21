@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { callClaude, parseJSON } from '@/lib/claude'
+import { callClaude, parseJSON, MODELS } from '@/lib/claude'
 import { ROAST_SYSTEM, ROAST_PROMPT } from '@/lib/prompts/roast'
 
 // No auth required — this is the top-of-funnel acquisition route.
 // Uses Haiku for speed and cost. No Career DNA needed.
-
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
 export interface RoastResult {
   total_score: number
@@ -35,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const raw = await callClaude({
-      model: HAIKU_MODEL,
+      model: MODELS.fast,
       system: ROAST_SYSTEM,
       messages: [
         {

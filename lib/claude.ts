@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 export const MODELS = {
   synthesis: 'claude-opus-4-6',   // Career DNA extraction from 20 resumes
   generation: 'claude-sonnet-4-6', // Resume tailoring, cover letters, scoring
+  fast: 'claude-haiku-4-5-20251001', // Roast, scoring, cheap fast tasks
 } as const
 
 const client = new Anthropic({
