@@ -61,9 +61,9 @@ When switching from one environment to another mid-task:
 
 ## Current State (update after every task)
 
-### Infrastructure — Last updated Mar 21, 2026 (end of session 2)
+### Infrastructure — Last updated Mar 21, 2026 (end of session 3)
 - [x] Git: `main` is default branch, GitHub token wired into remote — Cowork can push directly
-- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (commit 42115a4)
+- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (commit 9889677)
 - [x] Supabase tables: `users`, `career_dna`, `achievements`, `generated_applications` — all exist
 - [x] Supabase `is_beta` column: LIVE — applied via Management API on Mar 20
 - [x] James user row: EXISTS — `is_beta = true`, `onboarding_complete = false`
@@ -85,7 +85,7 @@ When switching from one environment to another mid-task:
 - [ ] James must complete onboarding at careerswarm.com to set `onboarding_complete = true` and create `career_dna` row — required to access dashboard
 - [x] Claude Projects setup complete: CareerSwarm III project created, CLAUDE-PROJECT-BRIEF.md added as knowledge file
 - [ ] Run morning briefing task once manually (Scheduled sidebar) to pre-approve Gmail + Vercel tool access
-- [ ] Git index.lock present in local repo (from Claude Code session) — next Claude Code session run `rm .git/index.lock` then `git pull origin main` to sync
+- [x] Git index.lock cleared by Claude Code session Mar 21 — repo is clean
 - [ ] Stripe env vars still not set in Vercel (see Known Issues)
 
 ### Build Phase Status
@@ -252,9 +252,13 @@ Preferences, repeated corrections, and patterns James has established. Every Cla
 - Supabase Management API works from Cowork bash: POST to `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/database/query` with the personal access token.
 - Supabase service role key can be fetched fresh via `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/api-keys` -- use for auth admin operations.
 - Test user exists: `tester@careerswarm.com` / `TestUser2026!` -- use for browser/API testing without touching James's account.
-- Claude in Chrome can READ pages on careerswarm.com but CANNOT execute JavaScript or click when the Claude extension is active on the same origin. This is a known Chrome extension permission conflict. Workaround: use API-level testing via curl/bash for backend routes.
+- Claude in Chrome can READ pages and fill form fields on careerswarm.com. Screenshots, JavaScript execution, and click actions via the computer tool are blocked when the Claude extension is active on the same origin. Workaround for click actions: use form_input and scroll_to tools instead of computer clicks.
 - All CareerSwarm API routes use Supabase SSR cookie-based auth -- they cannot be tested via curl with Bearer tokens. A real browser session is required to test the full UI flow.
 - Git index.lock conflict: if `.git/index.lock` exists (from a Claude Code session), Cowork cannot push. Fix: ask Claude Code to run `rm .git/index.lock && git pull origin main` at start of next session.
+
+**Accuracy**
+- Verify facts before stating them. Do not repeat notes from CLAUDE.md as truth without confirming first. If something is stated as a fact, it should be confirmed, not assumed from a prior note.
+- Do not quote line counts, file sizes, or other specifics without checking.
 
 **Business context**
 - CareerSwarm is pre-revenue but live. The blockers to revenue are Stripe env vars (not set) and top-of-funnel (Resume Roast not built yet).
