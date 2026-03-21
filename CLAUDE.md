@@ -26,26 +26,13 @@ James works across three Claude environments. Each has a distinct role:
 **Does NOT have:** `npm install`, `tsc --noEmit` (TypeScript compile check) — for these only, use Claude Code.
 **How to start:** Open Claude desktop app, select Cowork. CLAUDE.md is loaded via workspace folder.
 
-### Claude Chat (claude.ai — web or mobile)
+### Claude Projects (claude.ai — web or mobile)
 **Use for:** Quick strategic questions, brainstorming, reviewing a pasted document, thinking through decisions, or any session where you don't have desktop access.
-**Has:** Conversation, file uploads (paste or attach), web search.
-**Does NOT have:** Workspace folder access, MCP connections, skills, or persistent project context.
-**How to use without losing context:**
-1. Open claude.ai in browser or the Claude mobile app.
-2. Start your message with this block (copy/paste from here):
-
-```
-PROJECT CONTEXT — CareerSwarm III
-Live URL: https://careerswarm.com | Repo: zganich/careerswarm-III
-Stack: Next.js 14 + Supabase + Anthropic SDK + Tailwind + Radix UI
-Vercel: Hobby plan (10s function timeout)
-[Paste the Current State section below, then ask your question]
-```
-
-3. Copy the "Current State" section from this file and paste it after the block above.
-4. Ask your question. Claude chat will have enough context to give useful answers.
-
-**For code reviews on mobile:** Copy the relevant file contents directly into the chat. Claude chat can review, suggest fixes, and explain — you then implement in Claude Code when back at your desk.
+**Has:** Conversation, file uploads, web search, and persistent project context via CLAUDE-PROJECT-BRIEF.md as a knowledge file.
+**Does NOT have:** Workspace folder access, MCP connections, or skills.
+**How to use:** Open the CareerSwarm III project in claude.ai. Context is loaded automatically from the knowledge file — no need to paste anything. Just ask your question.
+**Keeping context current:** At the end of any Cowork session where state changed, regenerate CLAUDE-PROJECT-BRIEF.md and re-upload it to the Claude Project knowledge file.
+**For code reviews on mobile:** Copy the relevant file contents directly into the chat. Claude Projects can review, suggest fixes, and explain — implement in Claude Code when back at your desk.
 
 ---
 
@@ -69,17 +56,6 @@ When switching from one environment to another mid-task:
 - **Stack:** Next.js 14 (App Router) + Supabase (auth + DB) + Anthropic SDK + Tailwind + Radix UI
 - **Node version on Vercel:** 24.x
 - **Vercel plan:** Hobby (10s function timeout — keep this in mind for API routes)
-
----
-
-## Owner / Candidate Profile
-
-- **Name:** James Knight
-- **Email:** james@careerswarm.com (primary for CareerSwarm business)
-- **Personal email:** jknight3@gmail.com (Gmail MCP connected to this account)
-- **Target roles:** Head of Partnerships, VP Partnerships, Director Strategic Alliances
-- **Location:** Cottonwood Heights, UT (SLC metro) — Remote or SLC only
-- **Comp floor:** $200K+ OTE
 
 ---
 
@@ -107,7 +83,7 @@ When switching from one environment to another mid-task:
 - [x] Scheduled tasks live: `careerswarm-morning-briefing` (weekdays 8am) + `ibm-deadline-alert` (Mar 24 8am)
 - [x] Stale IBM proposal drafts deleted (FINAL.docx + original .docx removed — POLISHED.docx is the only version)
 - [ ] James must complete onboarding at careerswarm.com to set `onboarding_complete = true` and create `career_dna` row — required to access dashboard
-- [ ] James must finish Claude Projects setup: open app, click "Create your first project", select careerswarm III folder, add CLAUDE-PROJECT-BRIEF.md as knowledge file
+- [x] Claude Projects setup complete: CareerSwarm III project created, CLAUDE-PROJECT-BRIEF.md added as knowledge file
 - [ ] Run morning briefing task once manually (Scheduled sidebar) to pre-approve Gmail + Vercel tool access
 - [ ] Git index.lock present in local repo (from Claude Code session) — next Claude Code session run `rm .git/index.lock` then `git pull origin main` to sync
 - [ ] Stripe env vars still not set in Vercel (see Known Issues)
@@ -238,7 +214,7 @@ Architectural and strategic decisions with the reasoning behind them. Do not rev
 | /roast page auth | Unprotected route | Resume Roast is the top-of-funnel acquisition tool — no account required. Do not add `/roast` to the protected paths in `middleware.ts`. Guest sessions use `session_token` in localStorage and link to account post-signup. |
 | Stripe status | Wired but not live | Stripe checkout, webhooks, and portal are built. Env vars (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO`) are NOT yet set in Vercel. Webhook is NOT yet registered in Stripe dashboard. Do not assume Stripe is functional until both are confirmed. |
 | Humanization layer | Shared prompt constant, not post-processing | Humanization rules belong at the end of each prompt in `lib/prompts/` (cover-letter, outreach, resume summary section) as a shared `HUMANIZATION_RULES` constant — not as a separate API call. One import, all agents inherit the change. |
-| Document generation (Cowork) | JS generator scripts + docx npm | Pattern: write a Node.js generator script in `/sessions/loving-cool-wright/careerswarm-spec/`, run with `node`, copy output `.docx`/`.pptx` to workspace folder. The local npm project at that path has `docx` and `pptxgenjs` installed. |
+| Document generation (Cowork) | Skills-based generation | Use the `docx`, `pptx`, and `pdf` skills in Cowork to generate documents directly. No external scripts needed. Output goes to the workspace folder. |
 
 ---
 
@@ -261,34 +237,27 @@ Preferences, repeated corrections, and patterns James has established. Every Cla
 - When adding a new Supabase table or column, write the migration SQL in `supabase/migrations/` with a timestamped filename. Never alter the schema directly in the Supabase dashboard without a corresponding migration file.
 
 **Workflow**
-- At the end of every session (Claude Code or Cowork), update the Current State section and ask the end-of-session ritual question (Rule 15). This is not optional — it is how context persists.
-- When switching environments mid-task, note what was just completed and what is next before closing. The next environment reads this file first.
-- James works across three environments: Claude Code (code), Cowork (documents + MCP), Claude Chat (mobile/strategic). See Environment Guide at the top of this file for task routing.
+- Be direct. Decide. Lead with the most important thing. Do not present options when a recommendation is appropriate.
+- James is not technical. Explain git/code concepts in plain English. GITHUB-REFERENCE.md in the workspace is the reference guide.
+- At the end of every session (Claude Code or Cowork), update the Current State section and ask the end-of-session ritual question (Rule 15). This is not optional.
+- When switching environments mid-task, note what was just completed and what is next before closing.
+- One topic per conversation keeps Claude performing well. Start new conversations frequently; the project knowledge file means context never gets lost.
+- Stale draft docs should be deleted once a polished version exists. Only keep the submission-ready version of each document.
+- End-of-session: James says "end of session" -- update Current State + Learnings, then push CLAUDE.md via `git push origin main`.
+- Primary email for CareerSwarm business is james@careerswarm.com. jknight3@gmail.com is the Gmail MCP connected account -- use it for inbox searches but not as the business contact email.
+
+**Technical workflow**
+- Cowork is the PRIMARY environment. It can push to git, run Supabase queries, and do browser testing. Claude Code is only needed for `npm install` and `tsc --noEmit`.
+- GitHub token is wired into git remote -- Cowork can run `git push origin main` directly.
+- Supabase Management API works from Cowork bash: POST to `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/database/query` with the personal access token.
+- Supabase service role key can be fetched fresh via `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/api-keys` -- use for auth admin operations.
+- Test user exists: `tester@careerswarm.com` / `TestUser2026!` -- use for browser/API testing without touching James's account.
+- Claude in Chrome can READ pages on careerswarm.com but CANNOT execute JavaScript or click when the Claude extension is active on the same origin. This is a known Chrome extension permission conflict. Workaround: use API-level testing via curl/bash for backend routes.
+- All CareerSwarm API routes use Supabase SSR cookie-based auth -- they cannot be tested via curl with Bearer tokens. A real browser session is required to test the full UI flow.
+- Git index.lock conflict: if `.git/index.lock` exists (from a Claude Code session), Cowork cannot push. Fix: ask Claude Code to run `rm .git/index.lock && git pull origin main` at start of next session.
 
 **Business context**
-- CareerSwarm is pre-revenue but live. The product works. The blockers to revenue are Stripe env vars (not set) and top-of-funnel (Resume Roast not built yet).
-- Entity formation (Utah LLC) is in progress. Grant applications (IBM Impact Accelerator deadline March 25 2026, Microsoft for Startups, Anthropic startup credits) are the immediate funding priority.
-- James is both the founder and the target user — a partnerships/BD executive who lived the job search problem firsthand. This is not a pivot or a business school exercise. The founder story belongs in all external-facing materials.
+- CareerSwarm is pre-revenue but live. The blockers to revenue are Stripe env vars (not set) and top-of-funnel (Resume Roast not built yet).
+- James is both the founder and the target user -- a partnerships/BD executive who lived the job search problem firsthand. The founder story belongs in all external-facing materials.
 - Never let grant or investor materials claim "paying subscribers" or "paying customers" until Stripe is confirmed live. This is a material misrepresentation risk.
-
-**Workflow (updated March 21 2026)**
-- Primary email for CareerSwarm business is james@careerswarm.com — use this in all documents, proposals, and external-facing materials. jknight3@gmail.com is the Gmail MCP connected account — use it for inbox searches but not as the business contact email.
-- Claude Projects system is now set up: CLAUDE-PROJECT-BRIEF.md is the condensed knowledge file for Claude Projects, CLAUDE.md is the full living document. Both live in the workspace. Project brief should be added to the CareerSwarm III Claude Project as a knowledge file.
-- Scheduled tasks are live: morning briefing fires weekdays at 8am, IBM deadline alert fires March 24 at 8am. Check the Scheduled sidebar to manage them. Run morning briefing once manually to pre-approve tool access.
-- Power user infrastructure is documented in POWER-USER-PLAYBOOK.md — 7 layers covering context, automation, MCPs, conversation patterns, parallel agents, memory management, and skills.
-- Stale draft docs should be deleted once a POLISHED version exists. Only keep the submission-ready version of each document.
-- One topic per conversation is the discipline that keeps Claude performing well. Start new conversations frequently; the project knowledge file means context never gets lost.
-
-**Workflow (updated March 20 2026)**
-- James wants Claude to decide top priorities, not present options. Be direct. Lead with the most important thing.
-- James is not technical. Explain git/code concepts in plain English. GITHUB-REFERENCE.md in workspace root is the reference guide.
-- Cowork is now the PRIMARY environment. It can push to git, run Supabase queries, and do browser testing. Claude Code is only needed for `npm install` and `tsc --noEmit`.
-- GitHub token is wired into git remote — Cowork can run `git push origin main` directly. No more PR dance.
-- Supabase Management API works from Cowork bash: POST to `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/database/query` with the personal access token.
-- Supabase service role key can be fetched fresh via `https://api.supabase.com/v1/projects/grcnfkxmmrboavlbqnqs/api-keys` — use for auth admin operations (creating users, etc).
-- Test user exists: `tester@careerswarm.com` / `TestUser2026!` — use for browser/API testing without touching James's account.
-- Claude in Chrome browser automation can READ pages on careerswarm.com reliably but CANNOT execute JavaScript or click on pages when the Claude extension is active on the same origin. This is a known Chrome extension permission conflict. Workaround: use API-level testing via curl/bash for backend routes; use browser reads for UI audits.
-- All CareerSwarm API routes use Supabase SSR cookie-based auth — they cannot be tested via curl with Bearer tokens. A real browser session is required to test the full UI flow.
-- End-of-session: James says "end of session" -- update Current State + Learnings, then Cowork pushes CLAUDE.md directly via `git push origin main`.
-- Git index.lock conflict: if `.git/index.lock` exists (from a Claude Code session), Cowork cannot stash or merge. Workaround: ask Claude Code to run `rm .git/index.lock && git pull origin main` at start of next session.
 - Notion Mission Control: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
