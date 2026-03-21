@@ -61,18 +61,18 @@ When switching from one environment to another mid-task:
 
 ## Current State (update after every task)
 
-### Infrastructure — Last updated Mar 21, 2026 (end of session 3)
+### Infrastructure — Last updated Mar 21, 2026 (end of session 4)
 - [x] Git: `main` is default branch, GitHub token wired into remote — Cowork can push directly
-- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (commit 9889677)
+- [x] Vercel: Live on `main`, careerswarm.com attached, latest build READY (commit 503faf8)
 - [x] Supabase tables: `users`, `career_dna`, `achievements`, `generated_applications` — all exist
 - [x] Supabase `is_beta` column: LIVE — applied via Management API on Mar 20
 - [x] James user row: EXISTS — `is_beta = true`, `onboarding_complete = false`
 - [x] Supabase auth: site_url = `https://careerswarm.com`, redirect URLs set, `mailer_autoconfirm = true`
 - [x] Vercel env vars: `NEXT_PUBLIC_SUPABASE_URL` confirmed pointing at correct project
-- [x] TypeScript: 0 errors (last confirmed Mar 16)
+- [x] TypeScript: 0 errors (confirmed build passing Mar 21 session 4)
 - [x] PDF parsing: `unpdf` v1 — live
 - [x] Onboarding placeholders: FIXED and deployed (PR #4 merged, commit e19f2d3)
-- [x] Parse-resume timeout fix: sequential calls, 8000 char cap — DEPLOYED
+- [x] Parse-resume timeout fix: sequential calls, 8000 char cap — RE-APPLIED (was accidentally reverted in session 3 docs commit)
 - [x] Test user created: `tester@careerswarm.com` / `TestUser2026!` — confirmed in auth + users table
 - [x] Stale PR #1 closed on GitHub
 - [x] IBM proposal polished: `CareerSwarm-IBM-Impact-Proposal-POLISHED.docx` saved to workspace — READY TO SUBMIT (uses james@careerswarm.com)
@@ -86,24 +86,27 @@ When switching from one environment to another mid-task:
 - [x] Claude Projects setup complete: CareerSwarm III project created, CLAUDE-PROJECT-BRIEF.md added as knowledge file
 - [ ] Run morning briefing task once manually (Scheduled sidebar) to pre-approve Gmail + Vercel tool access
 - [x] Git index.lock cleared by Claude Code session Mar 21 — repo is clean
-- [ ] Stripe env vars still not set in Vercel (see Known Issues)
+- [x] Stripe env vars: ALL FOUR set in Vercel production — STRIPE_SECRET_KEY (sk_live_), NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY (pk_live_), STRIPE_PRICE_PRO (price_1T7ihbRGBj1peK9YyLjUOqtZ, $49/mo), STRIPE_WEBHOOK_SECRET (fresh whsec_) — Mar 21 session 4
+- [x] Stripe webhook: single clean endpoint at careerswarm.com/api/stripe/webhook (we_1TDWOVRGBj1peK9Y7btku5ra) — duplicate deleted
+- [x] Resume Roast page: LIVE at careerswarm.com/roast — lib/prompts/roast.ts, app/api/roast/route.ts, app/roast/page.tsx (commit 503faf8)
+- [x] MODELS.fast added to lib/claude.ts: 'claude-haiku-4-5-20251001' — for roast and cheap fast routes
+- [x] Vercel CLI auth: personal access token wired, can set env vars via CLI from Cowork
 
 ### Build Phase Status
 - [x] **Phase 0 — DONE:** Career DNA onboarding wizard, opportunity scoring, application package generator, localStorage prototype
 - [x] **Phase 1 — DONE:** Next.js App Router scaffold, Supabase auth, all API routes, dashboard wired to Supabase, prompts for all 7 agent functions
 - [x] **Phase 2 — DONE:** Stripe checkout, webhooks, portal, upgrade UI all wired
-- [ ] **Phase 3 — NOT STARTED:** Exa/Perplexity job discovery, Vercel cron, Resend email alerts, .docx downloads
+- [x] **Phase 3 — STARTED:** Resume Roast live at /roast (top-of-funnel). Next: Exa/Perplexity job discovery, Vercel cron, Resend email alerts, .docx downloads
 - [ ] **Phase 4 — NOT STARTED:** Mobile dashboard, team/coach accounts, analytics, referral
 
 ### Known Issues / Next Up (priority order)
 1. Submit IBM Impact Accelerator before March 25 2026 — POLISHED .docx ready in workspace; submit at ibmimpact.versaic.com/login
 2. Submit Anthropic startup credits — .docx with all answers ready in workspace; submit at claude.ai/programs/startups
 3. Complete onboarding at careerswarm.com — required to unlock dashboard (James must do this in browser)
-4. Set Stripe env vars in Vercel: STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO
-5. Register Stripe webhook at https://careerswarm.com/api/stripe/webhook
-6. Run full browser test of onboarding + dashboard + generate flow — blocked until James completes onboarding
-7. Get beta tester's email and run `UPDATE users SET is_beta = true WHERE email = 'tester@email.com'` via Supabase API (Cowork can do this)
-8. Claude Code: run `rm .git/index.lock && git pull origin main` to clear stale lock and sync local repo
+4. Run full browser test of onboarding + dashboard + generate flow — blocked until James completes onboarding
+5. Get beta tester's email and run `UPDATE users SET is_beta = true WHERE email = 'tester@email.com'` via Supabase API (Cowork can do this)
+6. VS Code Source Control panel is causing repeated git lock files — close it when doing Claude Code/Cowork sessions
+7. Stripe is now live in production — test a real checkout flow end to end once James completes onboarding
 - Schema gaps (not yet migrated): `career_dna` missing `role_family`, `career_narrative`, `consolidation_status`; `achievements` missing `source_resume_id`; tables `roasts` and `guest_sessions` not yet created
 - Persona hardcoding: 7 locations still hardcoded — fix is Sprint 0 (`lib/role-taxonomy.ts`), do not add more
 - Notion Mission Control built March 16 2026: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
@@ -254,7 +257,10 @@ Preferences, repeated corrections, and patterns James has established. Every Cla
 - Test user exists: `tester@careerswarm.com` / `TestUser2026!` -- use for browser/API testing without touching James's account.
 - Claude in Chrome can READ pages and fill form fields on careerswarm.com. Screenshots, JavaScript execution, and click actions via the computer tool are blocked when the Claude extension is active on the same origin. Workaround for click actions: use form_input and scroll_to tools instead of computer clicks.
 - All CareerSwarm API routes use Supabase SSR cookie-based auth -- they cannot be tested via curl with Bearer tokens. A real browser session is required to test the full UI flow.
-- Git index.lock conflict: if `.git/index.lock` exists (from a Claude Code session), Cowork cannot push. Fix: ask Claude Code to run `rm .git/index.lock && git pull origin main` at start of next session.
+- Git lock files: VS Code Source Control panel running in the background creates repeated `.git/index.lock` and `.git/HEAD.lock` files that block commits from Cowork. Close VS Code or disable its git integration when doing sessions. Workaround: push via GitHub API using the token in the git remote URL, or have Claude Code clear the lock.
+- Vercel CLI auth: `npx vercel --token <token>` works from Cowork for env var management. Token stored as Vercel personal access token (not OIDC — that's short-lived). The token used in session 4 is in the session history if needed.
+- Stripe API is accessible directly via curl from Cowork bash using the secret key. Can list products, prices, webhooks, and create/delete endpoints without needing the dashboard.
+- parse-resume regression watch: the `export const maxDuration = 90` + parallel `Promise.all` pattern keeps getting reintroduced. The correct pattern is sequential calls with 8000-char cap. If onboarding parse fails, check route.ts first for this regression.
 
 **Accuracy**
 - Verify facts before stating them. Do not repeat notes from CLAUDE.md as truth without confirming first. If something is stated as a fact, it should be confirmed, not assumed from a prior note.
