@@ -187,10 +187,10 @@ function PhaseUpload({
       {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4 mb-5">
         {[
-          { label: 'Full Name', key: 'name', placeholder: 'James Knight' },
+          { label: 'Full Name', key: 'name', placeholder: 'Your full name' },
           { label: 'Email', key: 'email', placeholder: 'you@email.com' },
-          { label: 'LinkedIn', key: 'linkedin', placeholder: 'linkedin.com/in/yourname' },
-          { label: 'Location', key: 'location', placeholder: 'Salt Lake City, UT' },
+          { label: 'LinkedIn', key: 'linkedin', placeholder: 'linkedin.com/in/yourprofile' },
+          { label: 'Location', key: 'location', placeholder: 'City, State' },
         ].map((field) => (
           <div key={field.key}>
             <label className="block font-mono text-[10px] tracking-[0.15em] uppercase text-[#a09080] mb-1.5">
