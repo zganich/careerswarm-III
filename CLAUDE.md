@@ -108,7 +108,7 @@ When switching from one environment to another mid-task:
 - Immediate funding actions: IBM Impact Accelerator (submit before March 25 2026 — proposal drafted, needs fact-check and humanize pass before submission), Microsoft for Startups (microsoft.com/startups, free $6K, ~5 min), Anthropic startup credits (claude.ai/programs/startups)
 - IBM proposal CRITICAL flag: proposal claims "paying subscribers" and "paying customers" but Stripe is not live. Must correct before submission or it is a material misrepresentation.
 - Notion Mission Control built March 16 2026 — 10 domain pages covering all business areas. URL: https://www.notion.so/325b12ea6b738114b859d4c11f82f9aa
-- GITHUB-REFERENCE.md added to workspace root — non-technical git guide for James. Needs commit/push via Claude Code.
+- GITHUB-REFERENCE.md committed and live in repo root — non-technical git guide for James.
 - OpenClaw integration planned (Phase 3): personal AI agent platform connecting CareerSwarm to WhatsApp/Slack/Telegram via SOUL.md config. Architecture documented in Notion.
 
 ---
