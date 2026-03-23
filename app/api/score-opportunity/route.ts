@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { callClaude, parseJSON, MODELS } from '@/lib/claude'
 import { SCORE_OPPORTUNITY_SYSTEM, SCORE_OPPORTUNITY_PROMPT } from '@/lib/prompts/score-opportunity'
 import { createClient } from '@/lib/supabase/server'
-import type { OpportunityScore } from '@/lib/types'
+import type { OpportunityScore, Achievement } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,9 +47,9 @@ Domain Skills: ${dna.skills_domain?.join(', ')}
 Partner Types: ${dna.skills_partner_types?.join(', ')}
     `.trim()
 
-    const achievementsSummary = (achievements || [])
+    const achievementsSummary = (achievements as Achievement[] || [])
       .slice(0, 7)
-      .map((a) => `• ${a.company} (${a.title}): ${a.metric} — ${a.formatted}`)
+      .map((a) => `• ${a.company} (${a.title}): ${a.metric} - ${a.formatted}`)
       .join('\n')
 
     const raw = await callClaude({

@@ -216,3 +216,11 @@ export interface GenerateApplicationResponse {
   keywordsMatched: number
   achievementsUsed: string[]
 }
+
+export interface CompCheckResponse {
+  ote_estimate: string
+  base_estimate: string
+  verdict: 'PASS' | 'FLAG' | 'FAIL'
+  rationale: string
+  negotiation_tips: string
+}

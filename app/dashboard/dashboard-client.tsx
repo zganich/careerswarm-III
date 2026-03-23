@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus } from '@/lib/types'
+import type { GenerateApplicationResponse, OpportunityScore, ApplicationStatus, CompCheckResponse } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 
 type Tab = 'generate' | 'pipeline' | 'dna'
@@ -187,8 +187,14 @@ function GenerateTab({
   const [step, setStep] = useState<'input' | 'scoring' | 'scored' | 'generating' | 'done'>('input')
   const [score, setScore] = useState<OpportunityScore | null>(null)
   const [result, setResult] = useState<GenerateApplicationResponse | null>(null)
-  const [activeDoc, setActiveDoc] = useState<'resume' | 'cover' | 'outreach'>('resume')
+  const [activeDoc, setActiveDoc] = useState<'resume' | 'cover' | 'outreach' | 'prep'>('resume')
   const [error, setError] = useState('')
+  const [research, setResearch] = useState<string | null>(null)
+  const [compCheck, setCompCheck] = useState<CompCheckResponse | null>(null)
+  const [interviewPrep, setInterviewPrep] = useState<string | null>(null)
+  const [loadingResearch, setLoadingResearch] = useState(false)
+  const [loadingCompCheck, setLoadingCompCheck] = useState(false)
+  const [loadingPrep, setLoadingPrep] = useState(false)
 
   async function handleScore() {
     if (!jd.trim()) { setError('Paste a job description to score.'); return }
@@ -239,9 +245,65 @@ function GenerateTab({
     }
   }
 
+  async function handleResearch() {
+    setLoadingResearch(true)
+    try {
+      const res = await fetch('/api/company-research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName: company, roleTitle: role, jobDescription: jd }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setResearch(data.report)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Research failed')
+    } finally {
+      setLoadingResearch(false)
+    }
+  }
+
+  async function handleCompCheck() {
+    setLoadingCompCheck(true)
+    try {
+      const res = await fetch('/api/comp-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName: company, roleTitle: role, jobDescription: jd }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setCompCheck(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Comp check failed')
+    } finally {
+      setLoadingCompCheck(false)
+    }
+  }
+
+  async function handleInterviewPrep() {
+    setLoadingPrep(true)
+    try {
+      const res = await fetch('/api/interview-prep', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName: company, roleTitle: role, jobDescription: jd }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setInterviewPrep(data.brief)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Interview prep failed')
+    } finally {
+      setLoadingPrep(false)
+    }
+  }
+
   function reset() {
     setJd(''); setCompany(''); setRole(''); setJobUrl('')
     setStep('input'); setScore(null); setResult(null); setError('')
+    setResearch(null); setCompCheck(null); setInterviewPrep(null)
+    setActiveDoc('resume')
   }
 
   const scoreClass =
@@ -352,6 +414,56 @@ function GenerateTab({
             </div>
           </div>
 
+          {/* Research + Comp Check actions */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={handleResearch}
+              disabled={loadingResearch}
+              className="border border-[#252525] text-[#a09080] font-mono text-[10px] tracking-[0.08em] uppercase px-5 py-2.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors disabled:opacity-40 flex items-center gap-2"
+            >
+              {loadingResearch ? (
+                <><span className="w-2.5 h-2.5 border border-[#a09080]/30 border-t-[#a09080] rounded-full spinner" />Researching...</>
+              ) : research ? 'Refresh Research' : 'Research Company'}
+            </button>
+            <button
+              onClick={handleCompCheck}
+              disabled={loadingCompCheck}
+              className="border border-[#252525] text-[#a09080] font-mono text-[10px] tracking-[0.08em] uppercase px-5 py-2.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors disabled:opacity-40 flex items-center gap-2"
+            >
+              {loadingCompCheck ? (
+                <><span className="w-2.5 h-2.5 border border-[#a09080]/30 border-t-[#a09080] rounded-full spinner" />Checking...</>
+              ) : compCheck ? 'Refresh Comp Check' : 'Comp Check'}
+            </button>
+          </div>
+
+          {/* Comp Check result */}
+          {compCheck && (
+            <div className={`border p-4 mb-5 ${
+              compCheck.verdict === 'PASS' ? 'border-[#27ae60] bg-[rgba(39,174,96,0.06)]' :
+              compCheck.verdict === 'FLAG' ? 'border-[#f39c12] bg-[rgba(243,156,18,0.06)]' :
+              'border-[#c0392b] bg-[rgba(192,57,43,0.06)]'
+            }`}>
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`font-mono text-[10px] tracking-[0.15em] uppercase font-bold ${
+                  compCheck.verdict === 'PASS' ? 'text-[#27ae60]' :
+                  compCheck.verdict === 'FLAG' ? 'text-[#f39c12]' : 'text-[#c0392b]'
+                }`}>{compCheck.verdict}</span>
+                <span className="font-mono text-[10px] text-[#a09080]">OTE: {compCheck.ote_estimate}</span>
+                <span className="font-mono text-[10px] text-[#a09080]">Base: {compCheck.base_estimate}</span>
+              </div>
+              <p className="text-xs text-[#a09080] leading-relaxed mb-1">{compCheck.rationale}</p>
+              <p className="text-xs text-[#f0ebe0] leading-relaxed">{compCheck.negotiation_tips}</p>
+            </div>
+          )}
+
+          {/* Company Research result */}
+          {research && (
+            <div className="border border-[#252525] bg-[#111] p-5 mb-6">
+              <div className="font-mono text-[9px] tracking-[0.15em] uppercase text-[#a09080] mb-3">Company Research</div>
+              <pre className="font-sans text-xs text-[#f0ebe0] leading-relaxed whitespace-pre-wrap">{research}</pre>
+            </div>
+          )}
+
           {error && (
             <div className="font-mono text-xs text-[#c0392b] border border-[#c0392b] bg-[rgba(192,57,43,0.08)] px-3 py-2 mb-4">
               {error}
@@ -429,7 +541,8 @@ function GenerateTab({
               { key: 'resume', label: 'Resume' },
               { key: 'cover', label: 'Cover Letter' },
               { key: 'outreach', label: 'LinkedIn Outreach' },
-            ] as { key: 'resume' | 'cover' | 'outreach'; label: string }[]).map(({ key, label }) => (
+              { key: 'prep', label: 'Interview Prep' },
+            ] as { key: 'resume' | 'cover' | 'outreach' | 'prep'; label: string }[]).map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveDoc(key)}
@@ -443,22 +556,55 @@ function GenerateTab({
             ))}
           </div>
 
-          <div className="relative">
-            <pre className="bg-[#111] border border-[#252525] p-6 font-mono text-xs text-[#f0ebe0] leading-relaxed whitespace-pre-wrap overflow-auto max-h-[600px]">
-              {activeDoc === 'resume' && result.resume}
-              {activeDoc === 'cover' && result.coverLetter}
-              {activeDoc === 'outreach' && result.outreachMessage}
-            </pre>
-            <button
-              onClick={() => {
-                const text = activeDoc === 'resume' ? result.resume : activeDoc === 'cover' ? result.coverLetter : result.outreachMessage
-                navigator.clipboard.writeText(text)
-              }}
-              className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
-            >
-              Copy
-            </button>
-          </div>
+          {activeDoc === 'prep' ? (
+            <div className="border border-[#252525] bg-[#111] p-6">
+              {!interviewPrep && !loadingPrep && (
+                <div className="text-center py-10">
+                  <p className="text-sm text-[#a09080] mb-5">Generate a tailored prep brief before your interview. Pulls directly from your real achievements.</p>
+                  <button
+                    onClick={handleInterviewPrep}
+                    className="bg-[#d4922a] text-[#080808] font-mono text-xs tracking-[0.1em] uppercase px-7 py-3 hover:bg-[#e8a030] transition-colors"
+                  >
+                    Generate Interview Prep Brief
+                  </button>
+                </div>
+              )}
+              {loadingPrep && (
+                <div className="text-center py-10">
+                  <div className="w-8 h-8 border-2 border-[#252525] border-t-[#d4922a] rounded-full spinner mx-auto mb-4" />
+                  <p className="font-mono text-xs text-[#a09080]">Preparing your brief...</p>
+                </div>
+              )}
+              {interviewPrep && (
+                <div className="relative">
+                  <pre className="font-sans text-xs text-[#f0ebe0] leading-relaxed whitespace-pre-wrap overflow-auto max-h-[600px]">{interviewPrep}</pre>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(interviewPrep)}
+                    className="absolute top-0 right-0 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative">
+              <pre className="bg-[#111] border border-[#252525] p-6 font-mono text-xs text-[#f0ebe0] leading-relaxed whitespace-pre-wrap overflow-auto max-h-[600px]">
+                {activeDoc === 'resume' && result.resume}
+                {activeDoc === 'cover' && result.coverLetter}
+                {activeDoc === 'outreach' && result.outreachMessage}
+              </pre>
+              <button
+                onClick={() => {
+                  const text = activeDoc === 'resume' ? result.resume : activeDoc === 'cover' ? result.coverLetter : result.outreachMessage
+                  navigator.clipboard.writeText(text)
+                }}
+                className="absolute top-3 right-3 font-mono text-[10px] tracking-[0.08em] uppercase bg-[#1a1a1a] border border-[#252525] text-[#a09080] px-3 py-1.5 hover:border-[#a09080] hover:text-[#f0ebe0] transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

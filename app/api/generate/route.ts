@@ -5,7 +5,7 @@ import { COVER_LETTER_SYSTEM, COVER_LETTER_PROMPT } from '@/lib/prompts/cover-le
 import { OUTREACH_SYSTEM, OUTREACH_PROMPT } from '@/lib/prompts/outreach'
 import { SCORE_OPPORTUNITY_SYSTEM, SCORE_OPPORTUNITY_PROMPT } from '@/lib/prompts/score-opportunity'
 import { createClient } from '@/lib/supabase/server'
-import type { GenerateApplicationResponse, OpportunityScore } from '@/lib/types'
+import type { GenerateApplicationResponse, OpportunityScore, Achievement } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       ? Math.min(98, Math.max(55, Math.round((matchedKeywords / jdKeywords.length) * 100)))
       : 75
 
-    const achievementsUsed = (achievements || [])
+    const achievementsUsed = (achievements as Achievement[] || [])
       .filter((a) => resumeText.includes(a.company))
       .map((a) => a.id)
 
