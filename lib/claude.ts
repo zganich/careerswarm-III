@@ -46,8 +46,30 @@ export function parseJSON<T>(raw: string): T {
   try {
     return JSON.parse(clean) as T
   } catch {
-    const match = clean.match(/[\[{][\s\S]*[\]}]/)
-    if (match) return JSON.parse(match[0]) as T
+    // Greedy regex fails on nested structures and explanation text.
+    // Walk forward from the first { or [ to find its matching closing bracket.
+    const start = clean.search(/[{[]/)
+    if (start !== -1) {
+      const opener = clean[start]
+      const closer = opener === '{' ? '}' : ']'
+      let depth = 0
+      let inString = false
+      let escape = false
+      for (let i = start; i < clean.length; i++) {
+        const ch = clean[i]
+        if (escape) { escape = false; continue }
+        if (ch === '\\' && inString) { escape = true; continue }
+        if (ch === '"') { inString = !inString; continue }
+        if (inString) continue
+        if (ch === opener) depth++
+        else if (ch === closer) {
+          depth--
+          if (depth === 0) {
+            return JSON.parse(clean.slice(start, i + 1)) as T
+          }
+        }
+      }
+    }
     throw new Error(`Failed to parse Claude JSON response: ${clean.slice(0, 200)}`)
   }
 }

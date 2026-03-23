@@ -32,4 +32,6 @@ Return:
     "Angle 3: Lead with their strategic/technical edge if applicable"
   ]
 }
+
+Respond with ONLY valid JSON. No explanation, no markdown, no code blocks. Start your response with { and end with }.
 `

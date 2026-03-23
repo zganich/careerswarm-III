@@ -45,4 +45,6 @@ Return this exact JSON structure:
   "location_preferences": ["Remote", "Hybrid"],
   "hard_exclusions": ["any obvious exclusions based on resume content"]
 }
+
+Respond with ONLY valid JSON. No explanation, no markdown, no code blocks. Start your response with { and end with }.
 `

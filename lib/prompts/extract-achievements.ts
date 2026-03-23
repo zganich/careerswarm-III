@@ -49,4 +49,6 @@ Impact guidelines:
 - low: smaller metrics, process improvements, team-level scope
 
 Order achievements by impact (high first).
+
+Respond with ONLY valid JSON. No explanation, no markdown, no code blocks. Start your response with { and end with }.
 `
