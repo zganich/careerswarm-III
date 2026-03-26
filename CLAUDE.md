@@ -75,7 +75,7 @@ When switching from one environment to another mid-task:
 - [x] Parse-resume timeout fix: sequential calls, 8000 char cap — RE-APPLIED (was accidentally reverted in session 3 docs commit)
 - [x] Test user created: `tester@careerswarm.com` / `TestUser2026!` — confirmed in auth + users table
 - [x] Stale PR #1 closed on GitHub
-- [x] IBM proposal polished: `CareerSwarm-IBM-Impact-Proposal-POLISHED.docx` saved to workspace — READY TO SUBMIT (uses james@careerswarm.com)
+- [x] IBM proposal polished: `CareerSwarm-IBM-Impact-Proposal-POLISHED.docx` saved to workspace — NOT SUBMITTED. IBM Impact Accelerator requires nonprofit, university, or government entity status. CareerSwarm does not qualify. Do not revisit.
 - [x] Anthropic credits application drafted: `CareerSwarm-Anthropic-Credits-Application.docx` saved to workspace — includes all field answers + submission guide (uses james@careerswarm.com)
 - [x] Primary email updated to james@careerswarm.com across all project files, docs, and scheduled tasks
 - [x] Claude Projects setup: CLAUDE-PROJECT-BRIEF.md + CLAUDE-PROJECTS-SETUP.md created in workspace
@@ -103,7 +103,7 @@ When switching from one environment to another mid-task:
 
 ### Known Issues / Next Up (priority order)
 1. **TOP UP ANTHROPIC CREDITS** at console.anthropic.com — blocks ALL Claude API calls (onboarding, roast, generate)
-2. Submit IBM Impact Accelerator before March 25 2026 — POLISHED .docx ready in workspace; submit at ibmimpact.versaic.com/login
+2. ~~Submit IBM Impact Accelerator~~ — INELIGIBLE. Requires nonprofit/university/gov entity. CareerSwarm does not qualify. Closed.
 3. Submit Anthropic startup credits — .docx with all answers ready in workspace; submit at claude.ai/programs/startups
 4. Complete onboarding at careerswarm.com — required to unlock dashboard (James must do this in browser); re-run browser test once credits are added
 5. Run full browser test of onboarding + dashboard + generate flow — blocked until credits topped up
